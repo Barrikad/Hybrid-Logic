@@ -12,7 +12,7 @@ datatype ('a,'b) formula = Nom 'b | Atom \<open>'a atom\<close> | Satisfaction '
   | Possibility \<open>('a,'b) formula\<close> | Neg \<open>('a,'b) formula\<close> | Imp \<open>('a,'b) formula\<close> \<open>('a,'b) formula\<close>
   | And \<open>('a,'b) formula\<close> \<open>('a,'b) formula\<close>
 
-(*semantics of arithmetic expressions*)
+(*semantics of arithmetic expressions*) 
 fun optionPlus :: \<open>int option \<Rightarrow> int option \<Rightarrow> int option\<close> where
   \<open>optionPlus None _ = None\<close> |
   \<open>optionPlus _ None = None\<close> |
