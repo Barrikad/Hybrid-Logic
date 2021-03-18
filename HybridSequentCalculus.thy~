@@ -81,8 +81,11 @@ fun nominalsNP :: \<open>(nom \<times> ('a hybr_form)) list \<Rightarrow> nom se
   \<open>nominalsNP [] = {}\<close> |
   \<open>nominalsNP ((n,p) # NP) = {n} \<union> (nominalsForm p) \<union> (nominalsNP NP)\<close>
 
-abbreviation used where 
-  \<open>used X Y Z Q \<equiv> nominalsNA X \<union> (nominalsNN Y) \<union> (nominalsNN Z) \<union> (nominalsForms Q)\<close>
+abbreviation usedXYZQ where 
+  \<open>usedXYZQ X Y Z Q \<equiv> nominalsNA X \<union> (nominalsNN Y) \<union> (nominalsNN Z) \<union> (nominalsForms Q)\<close>
+
+abbreviation usedABCP where 
+  \<open>usedABCP A B C P \<equiv> nominalsNA A \<union> (nominalsNN B) \<union> (nominalsNP C) \<union> (nominalsForms P)\<close>
 
 fun mergeNN :: \<open>(nom \<times> nom) list \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> (nom \<times> nom) list\<close> where
   \<open>mergeNN [] na nb = []\<close> |
@@ -107,31 +110,6 @@ fun mergeNP :: \<open>(nom \<times>('a hybr_form)) list \<Rightarrow> nom \<Righ
   \<open>mergeNP [] na nb = []\<close> |
   \<open>mergeNP ((n1,p) # NP) na nb = (if n1 = na then nb else n1, mergeP p na nb) # (mergeNP NP na nb)\<close>
 
-(*removes all statements about world refrenced by nw
-if other worlds depend on being reached from nw, remove them too
-use when it is shown that a world we assumed existed doesn't exist*)
-function purge' where
-  \<open>purge' X A B Z ((n1,n2) # C) X' A' B' Z' C' nw = 
-    (let ((X'',A'',B'',Z'',C''),C''') =
-    (if n1 = nw then (purge' X A B Z C [] [] [] [] [] n2,C') else ((X,A,B,Z,C),(n1,n2) # C')) in
-    purge' X'' A'' B'' Z'' C'' X' A' B' Z' C''' nw)\<close> |
-  \<open>purge' X A B ((n1,n2) # Z) [] X' A' B' Z' C' nw = (if n1 = nw then 
-    purge' X A B Z [] X' A' B' Z' C' nw else
-    purge' X A B Z [] X' A' B' ((n1,n2) # Z') C' nw)\<close>|
-  \<open>purge' X A ((n1,n2) # B) [] [] X' A' B' Z' C' nw = (if n1 = nw then 
-    purge' X A B [] [] X' A' B' Z' C' nw else
-    purge' X A B [] [] X' A' ((n1,n2) # B') Z' C' nw)\<close>|
-  \<open>purge' X ((n1,a) # A) [] [] [] X' A' B' Z' C' nw = (if n1 = nw then 
-    purge' X A [] [] [] X' A' B' Z' C' nw else
-    purge' X A [] [] [] X' ((n1,a) # A') B' Z' C' nw)\<close>|
-  \<open>purge' ((n1,a) # X) [] [] [] [] X' A' B' Z' C' nw = (if n1 = nw then 
-    purge' X [] [] [] [] X' A' B' Z' C' nw else
-    purge' X [] [] [] [] ((n1,a) # X') A' B' Z' C' nw)\<close>|
-  \<open>purge' [] [] [] [] [] X' A' B' Z' C' nw = (X',A',B',Z',C')\<close> 
-  by sorry
-
-abbreviation purge where \<open>purge X A B Z C \<equiv> purge' X A B Z C [] [] [] [] []\<close>
-
 primrec member where
   \<open>member _ [] = False\<close> |
   \<open>member m (n # A) = (m = n \<or> member m A)\<close>
@@ -142,7 +120,7 @@ lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<c
 function pvr :: 
 \<open>(nom \<times> 'a) list \<Rightarrow> (nom \<times> 'a) list \<Rightarrow> 
 (nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
-(nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
+(nom \<times> nom) list \<Rightarrow> (nom \<times> ('a hybr_form)) list \<Rightarrow>
 'a hybr_form list \<Rightarrow> 'a hybr_form list 
 \<Rightarrow> bool\<close>
 and witness where
@@ -153,9 +131,8 @@ and witness where
   \<open>pvr X A Y B Z C Q (Sat n (Con p1 p2) # P) =(pvr X A Y B Z C Q (Sat n p1 # P) 
                                              \<and> pvr X A Y B Z C Q (Sat n p2 # P))\<close> |
   \<open>pvr X A Y B Z C Q (Sat n1 (Sat n2 p) # P) = pvr X A Y B Z C Q (Sat n2 p # P)\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n (Pos p) # P)     =(let nw = fresh (used X Y Z P \<union> 
-                                                              (used A B C Q)) in
-                                              (pvr X A Y B Z ((n,nw) # C) Q (Sat nw p # P)))\<close> |
+  \<open>pvr X A Y B Z C Q (Sat n (Pos p) # P)     = pvr X A Y B Z ((n,p) # C) Q P\<close> |
+                                               (*(n,p) represents \<exists>nw. nRnw \<and> @ nw p*)
   \<open>pvr X A Y B Z C Q (p # P)                 = pvr X A Y B Z C Q (Sat Uni p # P)\<close> |
   (*match formulas on LHS*)
   \<open>pvr X A Y B Z C (Sat n (Pro a) # Q) []    = pvr ((n,a) # X) A Y B Z C Q []\<close> |
@@ -163,25 +140,22 @@ and witness where
   \<open>pvr X A Y B Z C (Sat n (Neg p) # Q) []    = pvr X A Y B Z C Q [Sat n p]\<close> |
   \<open>pvr X A Y B Z C (Sat n (Con p1 p2) # Q) []= pvr X A Y B Z C (Sat n p1 # (Sat n p2 # Q)) []\<close> |
   \<open>pvr X A Y B Z C (Sat n1 (Sat n2 p) # Q) []= pvr X A Y B Z C (Sat n2 p # Q) []\<close> |
-  \<open>pvr X A Y B Z C (Sat n (Pos p) # Q) []    =(let nw = fresh (used X Y Z Q \<union> 
-                                                              (used A B C Q)) in
+  \<open>pvr X A Y B Z C (Sat n (Pos p) # Q) []    =(let nw = fresh (usedXYZQ X Y Z Q \<union> 
+                                                              (usedABCP A B C Q)) in
                                               (pvr X A Y B ((n,nw) # Z) C (Sat nw p # Q) []))\<close> |
   \<open>pvr X A Y B Z C Q (p # P)                 = pvr X A Y B Z C (Sat Uni p # Q) []\<close> |
   (*merge equal nominals*)
   \<open>pvr X A ((n1,n2) # Y) B Z C [] [] = pvr (mergeNA X n1 n2) (mergeNA A n1 n2) 
                                            (mergeNN Y n1 n2) (mergeNN B n1 n2) 
-                                           (mergeNN Z n1 n2) (mergeNN C n1 n2) [] []\<close> |
+                                           (mergeNN Z n1 n2) (mergeNP C n1 n2) [] []\<close> |
 
-  (*find witnesses for possibility on RHS. 
-   If no witness can be found, purge the node and try with next*)
-  \<open>pvr X A [] B Z ((n,nw) # C) [] [] = (witness X A B Z C (n,nw) \<or>
-                                       (let (X',A',B',Z',C') = purge X A B Z C nw in 
-                                        pvr X' A' [] B' Z' C' [] []))\<close> |
+  (*find witnesses for possibility on RHS*)
+  \<open>pvr X A [] B Z ((n,p) # C) [] [] = (witness X A B Z C (n,p) \<or> pvr X A [] B Z C [] [])\<close> |
   (*can't find witness if nothing is reachable*)
-  \<open>witness X A B [] C (n,nw) = False\<close> |
+  \<open>witness _ _ _ [] _ _ = False\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B ((n1,n2) # Z) C (n,nw) = ((n1 = n \<and> pvr X A [(nw,n2)] B Z C [] []) \<or>
-                                            witness X A B Z C (n,nw))\<close> |
+  \<open>witness X A B ((n1,n2) # Z) C (n,p) = ((n1 = n \<and> pvr X A [] B Z C [] [Sat n2 p]) \<or>
+                                            witness X A B Z C (n,p))\<close> |
 
   (*@a b on RSH holds if a=b*)
   \<open>pvr X A [] ((n1,n2) # B) Z [] [] [] = (n1 = n2 \<or> pvr X A [] B Z [] [] [])\<close> |
@@ -200,7 +174,7 @@ We gather up statements about which nominals are equal in Y, then reduce everyth
 per world by emptying the list
 
 possibility on lhs should create a new accessible world. possibility on rhs can be witnessed by 
-existing accessible world. nominals created by possibility will only show up in satisfaction
+existing accessible world
 *)
 
 end
