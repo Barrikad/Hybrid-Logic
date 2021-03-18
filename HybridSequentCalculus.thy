@@ -1,10 +1,18 @@
 theory HybridSequentCalculus imports Main
 begin
 
+primrec member where
+  \<open>member _ [] = False\<close> |
+  \<open>member m (n # A) = (m = n \<or> member m A)\<close>
+
+lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<close>
+  by (induct A) simp_all
+
 datatype nom
   = Uni
   | Nml nat
 
+(*give nominals linear order. used to convert from set to list*)
 instantiation nom :: linorder
 begin
 fun less_eq_nom where
@@ -50,13 +58,17 @@ fun semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> (
 
 abbreviation \<open>sc X Y R V G w \<equiv> (\<forall> x \<in> X. semantics R V G w x) \<longrightarrow> (\<exists> y \<in> Y. semantics R V G w y)\<close>
 
+(*find the maximal nominal in a list of nominals, and return one bigger than that*)
+(*since nominals has linear order now we could just look at last element instead*)
 fun nomMax where
   \<open>nomMax [] i = Nml (Suc i)\<close> |
   \<open>nomMax (Uni # N) i = nomMax N i\<close> |
   \<open>nomMax (Nml n # N) i = nomMax N (max i n)\<close>
 
+(*return nominal not in a set of nominals*)
 abbreviation fresh where \<open>fresh N \<equiv> nomMax (sorted_list_of_set N) 0\<close>
 
+(*get a set of all used nominal, for different formula representations*)
 fun nominalsForm where
   \<open>nominalsForm (Pro a) = {}\<close> |
   \<open>nominalsForm (Nom n) = {n}\<close> |
@@ -81,9 +93,12 @@ fun nominalsNP :: \<open>(nom \<times> ('a hybr_form)) list \<Rightarrow> nom se
   \<open>nominalsNP [] = {}\<close> |
   \<open>nominalsNP ((n,p) # NP) = {n} \<union> (nominalsForm p) \<union> (nominalsNP NP)\<close>
 
+(*get all used nominals on one side of a sequent*)
 abbreviation used where 
   \<open>used X Y Z Q \<equiv> nominalsNA X \<union> (nominalsNN Y) \<union> (nominalsNN Z) \<union> (nominalsForms Q)\<close>
 
+(*merge functions replaces all occurences of a nominal with another
+use when two nominals are found to denote the same world*)
 fun mergeNN :: \<open>(nom \<times> nom) list \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> (nom \<times> nom) list\<close> where
   \<open>mergeNN [] na nb = []\<close> |
   \<open>mergeNN ((n1,n2) # NN) na nb = (let n3 = (if n1 = na then nb else n1) in 
@@ -110,34 +125,46 @@ fun mergeNP :: \<open>(nom \<times>('a hybr_form)) list \<Rightarrow> nom \<Righ
 (*removes all statements about world refrenced by nw
 if other worlds depend on being reached from nw, remove them too
 use when it is shown that a world we assumed existed doesn't exist*)
-function purge' where
+function purge' :: 
+\<open>(nom \<times> 'a) list \<Rightarrow> (nom \<times> 'a) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
+(nom \<times> nom) list \<Rightarrow>
+(nom \<times> 'a) list \<Rightarrow> (nom \<times> 'a) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
+(nom \<times> nom) list \<Rightarrow> 
+nom \<Rightarrow> 
+((nom \<times> 'a) list \<times> (nom \<times> 'a) list \<times> (nom \<times> nom) list \<times> (nom \<times> nom) list \<times> (nom \<times> nom) list)\<close>
+where
   \<open>purge' X A B Z ((n1,n2) # C) X' A' B' Z' C' nw = 
     (let ((X'',A'',B'',Z'',C''),C''') =
-    (if n1 = nw then (purge' X A B Z C [] [] [] [] [] n2,C') else ((X,A,B,Z,C),(n1,n2) # C')) in
+      (if n1 = nw then 
+      (purge' X A B Z C [] [] [] [] [] n2,C') 
+       else ((X,A,B,Z,C),(n1,n2) # C')) in
     purge' X'' A'' B'' Z'' C'' X' A' B' Z' C''' nw)\<close> |
-  \<open>purge' X A B ((n1,n2) # Z) [] X' A' B' Z' C' nw = (if n1 = nw then 
+  \<open>purge' X A B ((n1,n2) # Z) [] X' A' B' Z' C' nw = 
+    (if n1 = nw then 
     purge' X A B Z [] X' A' B' Z' C' nw else
     purge' X A B Z [] X' A' B' ((n1,n2) # Z') C' nw)\<close>|
-  \<open>purge' X A ((n1,n2) # B) [] [] X' A' B' Z' C' nw = (if n1 = nw then 
+  \<open>purge' X A ((n1,n2) # B) [] [] X' A' B' Z' C' nw = 
+    (if n1 = nw then 
     purge' X A B [] [] X' A' B' Z' C' nw else
     purge' X A B [] [] X' A' ((n1,n2) # B') Z' C' nw)\<close>|
-  \<open>purge' X ((n1,a) # A) [] [] [] X' A' B' Z' C' nw = (if n1 = nw then 
+  \<open>purge' X ((n1,a) # A) [] [] [] X' A' B' Z' C' nw = 
+    (if n1 = nw then 
     purge' X A [] [] [] X' A' B' Z' C' nw else
     purge' X A [] [] [] X' ((n1,a) # A') B' Z' C' nw)\<close>|
-  \<open>purge' ((n1,a) # X) [] [] [] [] X' A' B' Z' C' nw = (if n1 = nw then 
+  \<open>purge' ((n1,a) # X) [] [] [] [] X' A' B' Z' C' nw = 
+    (if n1 = nw then 
     purge' X [] [] [] [] X' A' B' Z' C' nw else
     purge' X [] [] [] [] ((n1,a) # X') A' B' Z' C' nw)\<close>|
   \<open>purge' [] [] [] [] [] X' A' B' Z' C' nw = (X',A',B',Z',C')\<close> 
-  by sorry
+by pat_completeness auto
+termination 
+  apply (relation \<open>measure (\<lambda>(X,A,B,Z,C,_,_,_,_,_,_). 
+                   \<Sum>p \<leftarrow> B @ Z @ C. \<Sum>q \<leftarrow> X @ A. (size p) + (size q))\<close>)
+  apply auto
+  sorry
+(*termination should be straight forward. Need to find out what fails*)
 
 abbreviation purge where \<open>purge X A B Z C \<equiv> purge' X A B Z C [] [] [] [] []\<close>
-
-primrec member where
-  \<open>member _ [] = False\<close> |
-  \<open>member m (n # A) = (m = n \<or> member m A)\<close>
-
-lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<close>
-  by (induct A) simp_all
 
 function pvr :: 
 \<open>(nom \<times> 'a) list \<Rightarrow> (nom \<times> 'a) list \<Rightarrow> 
@@ -180,7 +207,7 @@ and witness where
   (*can't find witness if nothing is reachable*)
   \<open>witness X A B [] C (n,nw) = False\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B ((n1,n2) # Z) C (n,nw) = ((n1 = n \<and> pvr X A [(nw,n2)] B Z C [] []) \<or>
+  \<open>witness X A B ((n1,n2) # Z) C (n,nw) = (((n1 = n \<or> n1 = Uni) \<and> pvr X A [(nw,n2)] B Z C [] []) \<or>
                                             witness X A B Z C (n,nw))\<close> |
 
   (*@a b on RSH holds if a=b*)
