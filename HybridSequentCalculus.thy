@@ -1,6 +1,12 @@
 theory HybridSequentCalculus imports Main
 begin
 
+fun f :: \<open>nat \<Rightarrow> nat\<close> where
+  \<open>f 0 = (2)\<close> |
+  \<open>f (Suc 0) = (4)\<close> |
+  \<open>f _ = 2\<close>
+
+
 primrec member where
   \<open>member _ [] = False\<close> |
   \<open>member m (n # A) = (m = n \<or> member m A)\<close>
@@ -160,7 +166,7 @@ by pat_completeness auto
 termination 
   apply (relation \<open>measure (\<lambda>(X,A,B,Z,C,_,_,_,_,_,_). 
                    \<Sum>p \<leftarrow> B @ Z @ C. \<Sum>q \<leftarrow> X @ A. (size p) + (size q))\<close>)
-  apply auto
+  apply simp_all
   sorry
 (*termination should be straight forward. Need to find out what fails*)
 
@@ -193,7 +199,7 @@ and witness where
   \<open>pvr X A Y B Z C (Sat n (Pos p) # Q) []    =(let nw = fresh (used X Y Z Q \<union> 
                                                               (used A B C Q)) in
                                               (pvr X A Y B ((n,nw) # Z) C (Sat nw p # Q) []))\<close> |
-  \<open>pvr X A Y B Z C Q (p # P)                 = pvr X A Y B Z C (Sat Uni p # Q) []\<close> |
+  \<open>pvr X A Y B Z C (p # Q) []                 = pvr X A Y B Z C (Sat Uni p # Q) []\<close> |
   (*merge equal nominals*)
   \<open>pvr X A ((n1,n2) # Y) B Z C [] [] = pvr (mergeNA X n1 n2) (mergeNA A n1 n2) 
                                            (mergeNN Y n1 n2) (mergeNN B n1 n2) 
@@ -216,9 +222,21 @@ and witness where
   \<open>pvr X ((n,a) # A) [] [] Z [] [] [] =(member (Uni,a) X \<or> member (n,a) X 
                                       \<or> pvr X A [] [] Z [] [] [])\<close> |
   (*If we reach this point, we couldn't show that the sequent is valid*)
-  \<open>pvr X [] [] [] Z [] [] [] = False\<close>
-  by sorry
+  \<open>pvr _ _ _ _ _ _ _ _  = False\<close>
+                      apply pat_completeness 
+             apply simp_all
+  sorry
+termination sorry
 
+
+definition prover where \<open>prover p \<equiv> pvr [] [] [] [] [] [] [] [p]\<close>
+
+datatype atoms = A | B
+
+definition \<open>main \<equiv> prover (Sat Uni (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
+
+proposition main
+  by code_simp
 (*General notes:
 magic uni nominal. Represents forall. To prove something for at the uni world, you must use 
 something from the uni world. Anything can be proven with statements from the uni world
