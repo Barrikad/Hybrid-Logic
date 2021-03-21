@@ -46,14 +46,14 @@ instance
 end
 
 datatype 'a hybr_form 
-  =  Pro 'a 
-  | Nom nom
-  | Neg \<open>'a hybr_form\<close> 
-  | Con \<open>'a hybr_form\<close> \<open>'a hybr_form\<close>
-  | Sat nom \<open>'a hybr_form\<close>
-  | Pos \<open>'a hybr_form\<close>
+  =  Pro 'a (\<open>PRO _\<close> 100)
+  | Nom nom (\<open>NOM _\<close> 100)
+  | Neg \<open>'a hybr_form\<close> (\<open>NOT _\<close> [900] 900)
+  | Con \<open>'a hybr_form\<close> \<open>'a hybr_form\<close> (infixl "AND" 300)
+  | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> 110)
+  | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> 800)
 
-fun semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
+primrec semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
                   (nom \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
   \<open>semantics R V G w (Pro a) = V w a\<close> |
   \<open>semantics R V G w (Nom n) = ((G n) = w)\<close> |
@@ -75,7 +75,7 @@ fun nomMax where
 abbreviation fresh where \<open>fresh N \<equiv> nomMax (sorted_list_of_set N) 0\<close>
 
 (*get a set of all used nominal, for different formula representations*)
-fun nominalsForm where
+primrec nominalsForm where
   \<open>nominalsForm (Pro a) = {}\<close> |
   \<open>nominalsForm (Nom n) = {n}\<close> |
   \<open>nominalsForm (Neg p) = nominalsForm p\<close> |
@@ -83,7 +83,7 @@ fun nominalsForm where
   \<open>nominalsForm (Sat n p) = {n} \<union> (nominalsForm p)\<close> |
   \<open>nominalsForm (Pos p) = nominalsForm p\<close>
 
-fun nominalsForms where
+primrec nominalsForms where
   \<open>nominalsForms [] = {}\<close> |
   \<open>nominalsForms (x # xs) = nominalsForm x \<union> (nominalsForms xs)\<close>
 
@@ -115,7 +115,7 @@ fun mergeNA :: \<open>(nom \<times> 'a) list \<Rightarrow> nom \<Rightarrow> nom
   \<open>mergeNA [] na nb = []\<close> |
   \<open>mergeNA ((n1,a) # NA) na nb = (if n1 = na then nb else n1, a) # (mergeNA NA na nb)\<close>
 
-fun mergeP :: \<open>'a hybr_form \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> 'a hybr_form\<close> where
+primrec mergeP :: \<open>'a hybr_form \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> 'a hybr_form\<close> where
   \<open>mergeP (Pro a) na nb = Pro a\<close> |
   \<open>mergeP (Nom n1) na nb = Nom (if n1 = na then nb else n1)\<close> |
   \<open>mergeP (Neg p) na nb = mergeP p na nb\<close> |
@@ -228,15 +228,71 @@ and witness where
   sorry
 termination sorry
 
-
+(*tautology definition*)
 definition prover where \<open>prover p \<equiv> pvr [] [] [] [] [] [] [] [p]\<close>
 
-datatype atoms = A | B
+(*abbreviations*)
+abbreviation Imp (infixr "THEN"  180)
+  where "Imp p q \<equiv> Neg (Con p (Neg q))" 
 
+abbreviation Iff (infixr "IFF" 180)
+  where "Iff p q \<equiv> Con (Imp p q) (Imp q p)"
+
+abbreviation Dis (infixl "OR"  200)
+  where "Dis p q \<equiv> Neg (Con (Neg p) (Neg q))" 
+
+abbreviation Nes (\<open>\<box> _\<close> 800)
+  where "Nes p \<equiv> Neg (Pos (Neg p))"
+
+(*tests*)
+datatype atoms = A | B | C | D | E | F
+
+(*valid tests*)
+proposition \<open>prover (((Sat (Nml 1)  (Pos (Nom (Nml 2)))) AND (Sat (Nml 2) (Pro A))) 
+                     THEN (Sat (Nml 1) (Pos (Pro A))))\<close>
+  by eval
+
+proposition \<open>prover (NOT (NOT Pro A AND Pro A))\<close>
+  by eval
+
+proposition \<open>prover (Pro A THEN (Pro B IFF Pro C) THEN Pro A)\<close>
+  by eval
+
+proposition \<open>prover ((Pro A OR Pro B) AND (Pro A OR NOT Pro B) THEN (Pro A))\<close>
+  by eval
+
+proposition \<open>prover (NOT (NOT(((Pro B OR (NOT Pro C AND Pro D)) IFF (Pro E OR (Pro C THEN Pro A))) 
+  IFF (((Pro B OR (NOT Pro C AND Pro D)) THEN (Pro E OR
+(Pro C THEN Pro A))) AND ((Pro E OR (Pro C THEN Pro A)) THEN (Pro B OR (NOT Pro C AND Pro D)))))))\<close>
+  by eval
+
+proposition \<open>prover (NOT (NOT ((Pro A AND Pro B) THEN ( ((Pro C IFF NOT Pro E) OR NOT Pro F) 
+THEN ((Pro A AND Pro B) OR (Pro B OR NOT Pro B)) )) 
+AND (Pro A OR Pro B) AND (Pro C IFF NOT Pro D)))\<close>
+  by eval
+
+proposition \<open>prover (NOT ((Sat (Nml 1) (\<diamond> (NOM Nml 2))) 
+             AND (Sat (Nml 2) (Pro A)) AND (Sat (Nml 1) (\<box> NOT Pro A))))\<close>
+  by eval
+
+proposition \<open>prover 
+ ((AT (Nml 1) (NOM Nml 3)) THEN 
+  ((AT (Nml 2) (Pro A)) OR (AT (Nml 1) (\<diamond> (AT (Nml 2) (NOT Pro A))))))\<close>
+  by eval
+
+proposition \<open>prover ((AT (Nml 1) (\<diamond> NOM Nml 2)) AND
+                     (AT (Nml 2) (\<diamond> NOM Nml 3)) AND 
+                     (AT (Nml 3) (Pro A)) THEN 
+                     (AT (Nml 1) (\<diamond>(\<diamond> (Pro A)))))\<close>
+  by eval
+
+(*invalid tests*)
+
+(*export*)
 definition \<open>main \<equiv> prover (Sat Uni (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
+proposition main by eval
+export_code main in Haskell
 
-proposition main
-  by code_simp
 (*General notes:
 magic uni nominal. Represents forall. To prove something for at the uni world, you must use 
 something from the uni world. Anything can be proven with statements from the uni world
