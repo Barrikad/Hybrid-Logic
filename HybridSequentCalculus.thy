@@ -16,7 +16,7 @@ lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<c
 
 datatype nom
   = Uni
-  | Nml nat
+  | Nml nat (\<open>NL _\<close> 999)
 
 (*give nominals linear order. used to convert from set to list*)
 instantiation nom :: linorder
@@ -46,8 +46,8 @@ instance
 end
 
 datatype 'a hybr_form 
-  =  Pro 'a (\<open>PRO _\<close> 100)
-  | Nom nom (\<open>NOM _\<close> 100)
+  =  Pro 'a (\<open>PRO _\<close> [999] 999)
+  | Nom nom (\<open>NOM _\<close> [998] 998)
   | Neg \<open>'a hybr_form\<close> (\<open>NOT _\<close> [900] 900)
   | Con \<open>'a hybr_form\<close> \<open>'a hybr_form\<close> (infixl "AND" 300)
   | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> 110)
@@ -169,24 +169,24 @@ fun pvr  where
 
 function reach and witness where
   (*merge equal nominals*)
-  \<open>reach X A ((n1,n2) # Y) B Z C = reach (mergeNA X n1 n2) (mergeNA A n1 n2) 
-                                         (mergeNN Y n1 n2) (mergeNN B n1 n2) 
-                                         (mergeNN Z n1 n2) (mergeNN C n1 n2)\<close> |
+  \<open>reach X A B Z C ((n1,n2) # Y) = reach (mergeNA X n1 n2) (mergeNA A n1 n2) 
+                                         (mergeNN B n1 n2) (mergeNN Z n1 n2) 
+                                         (mergeNN C n1 n2) (mergeNN Y n1 n2)\<close> |
 
   (*find witnesses for possibility on RHS. 
    If no witness can be found, purge the node and try with next*)
-  \<open>reach X A [] B Z ((n,nw) # C)  = (witness X A B Z Z C (n,nw) 
+  \<open>reach X A B Z ((n,nw) # C) [] = (witness X A B C Z (n,nw) Z 
                                     @(let (X',A',B',Z',C') = purge X A B Z C nw in 
-                                      reach X' A' [] B' Z' C'))\<close> |
-  \<open>reach X A [] B _ [] = [(X,A,B)]\<close> |
+                                      reach X' A' B' Z' C' []))\<close> |
+  \<open>reach X A B _ [] [] = [(X,A,B)]\<close> |
   (*can't find witness if nothing is reachable*)
-  \<open>witness X A B [] Z2 C (n,nw) = []\<close> |
+  \<open>witness X A B C Z2 (n,nw) [] = []\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B ((n1,n2) # Z) Z2 C (n,nw) = ((if (n1 = n \<or> n1 = Uni) 
-                                              then reach X A [(nw,n2)] B Z2 C 
+  \<open>witness X A B C Z2 (n,nw) ((n1,n2) # Z) = ((if (n1 = n \<or> n1 = Uni) 
+                                              then reach X A B Z2 C [(nw,n2)]
                                               else [])
-                                              @ witness X A B Z Z2 C (n,nw))\<close> 
-  sorry
+                                              @ witness X A B C Z2 (n,nw) Z)\<close> 
+  by pat_completeness auto
 termination sorry
 
 function atomize where
@@ -222,7 +222,7 @@ fun eval2 where
 
 fun eval1 where
   \<open>eval1 [] = True\<close> |
-  \<open>eval1 ((X,A,Y,B,Z,C) # XS) = (eval2 (reach X A Y B Z C) \<and> eval1 XS)\<close>
+  \<open>eval1 ((X,A,Y,B,Z,C) # XS) = (eval2 (reach X A B Z C Y) \<and> eval1 XS)\<close>
 
 (*tautology definition*)
 definition prover where \<open>prover p \<equiv> eval1 (atomize [] [] [] [] [] [] [] [(Uni,p)])\<close>
@@ -241,7 +241,7 @@ abbreviation Nes (\<open>\<box> _\<close> 800)
   where "Nes p \<equiv> Neg (Pos (Neg p))"
 
 (*tests*)
-datatype atoms = A | B | C | D | E | F
+datatype atoms = A | B | C | D | E | F | G | H | I | J | K | L | M | N 
 
 (*valid tests*)
 proposition \<open>prover (((Sat (Nml 1)  (Pos (Nom (Nml 2)))) AND (Sat (Nml 2) (Pro A))) 
@@ -291,7 +291,38 @@ proposition \<open>prover ((AT (Nml 1) ((NOM Nml 1) AND
                       THEN ((\<box>(Pro A)) THEN \<box> (Pro B))))))))\<close>
   by eval
 
+
 (*invalid tests*)
+proposition \<open>\<not>(prover (Pro A))\<close>
+  by eval
+
+proposition \<open>\<not>(prover (Con (Pro A) (Pro A)))\<close>
+  by eval
+
+proposition \<open>\<not>(prover (Con (Neg (Pro A)) (Pro A)))\<close>
+  by eval
+
+proposition \<open>\<not>(prover (Sat (Nml 1) (Con (Neg (Pro A)) (Pro A))))\<close>
+  by eval
+
+proposition \<open>\<not>(prover ( 
+  NOT (Pro A AND Pro A) 
+  AND (Pro C THEN Pro B) AND NOT (NOT Pro E THEN (Pro C OR NOT NOT Pro D))))\<close>
+  by eval
+
+proposition \<open>\<not>(prover ( 
+NOT (Pro A AND Pro A) AND (Pro C THEN Pro B) AND
+ (AT (Nml 1) (NOT (NOT Pro E THEN (Pro C OR NOT NOT Pro D)))) AND
+ (AT (Nml 2) (AT (Nml 3) (Pro C)))
+))\<close> by eval
+
+proposition \<open>\<not>(prover (
+(\<diamond>(Pro A)) AND (\<diamond>((Pro A) AND (\<diamond>(Pro A)))) AND (\<box>((Pro A) AND (\<diamond>(Pro A)) AND (\<diamond>((\<diamond>(NOT (Pro A))) AND (\<box>(Pro B)))))) AND
+(\<box>(NOT Pro B)) AND ((Pro A) IFF (Pro C)) AND (\<box>((Pro A) IFF (Pro C))) AND
+((Pro K) OR (Pro L) OR (Pro M) OR (Pro N) OR (Pro F)) AND
+((NOT Pro K) OR (NOT Pro L) OR (NOT Pro M)) AND
+(\<box>\<box>\<box>((Pro K) IFF (Pro L)))
+))\<close> by eval
 
 (*export*)
 definition \<open>main \<equiv> prover (Sat Uni (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
