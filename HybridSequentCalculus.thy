@@ -267,8 +267,8 @@ THEN ((Pro A AND Pro B) OR (Pro B OR NOT Pro B)) ))
 AND (Pro A OR Pro B) AND (Pro C IFF NOT Pro D)))\<close>
   by eval
 
-proposition \<open>prover (NOT ((Sat (Nml 1) (\<diamond> (NOM Nml 2))) 
-             AND (Sat (Nml 2) (Pro A)) AND (Sat (Nml 1) (\<box> NOT Pro A))))\<close>
+proposition \<open>prover (NOT ((AT (Nml 1) (\<diamond> (NOM Nml 2))) 
+             AND (AT (Nml 2) (Pro A)) AND (AT (Nml 1) (\<box> NOT Pro A))))\<close>
   by eval
 
 proposition \<open>prover 
