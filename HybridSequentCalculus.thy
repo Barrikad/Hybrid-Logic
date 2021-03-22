@@ -93,7 +93,7 @@ fun nominalsNN :: \<open>(nom \<times> nom) list \<Rightarrow> nom set\<close> w
 
 fun nominalsNA :: \<open>(nom \<times> 'a) list \<Rightarrow> nom set\<close> where
   \<open>nominalsNA [] = {}\<close> |
-  \<open>nominalsNA ((n,a) # NP) = {n} \<union> nominalsNA NP\<close>
+  \<open>nominalsNA ((n,a) # NA) = {n} \<union> nominalsNA NA\<close>
 
 fun nominalsNP :: \<open>(nom \<times> ('a hybr_form)) list \<Rightarrow> nom set\<close> where
   \<open>nominalsNP [] = {}\<close> |
@@ -101,7 +101,7 @@ fun nominalsNP :: \<open>(nom \<times> ('a hybr_form)) list \<Rightarrow> nom se
 
 (*get all used nominals on one side of a sequent*)
 abbreviation used where 
-  \<open>used X Y Z Q \<equiv> nominalsNA X \<union> (nominalsNN Y) \<union> (nominalsNN Z) \<union> (nominalsForms Q)\<close>
+  \<open>used X Y Z Q \<equiv> nominalsNA X \<union> (nominalsNN Y) \<union> (nominalsNN Z) \<union> (nominalsNP Q)\<close>
 
 (*merge functions replaces all occurences of a nominal with another
 use when two nominals are found to denote the same world*)
@@ -114,19 +114,6 @@ fun mergeNN :: \<open>(nom \<times> nom) list \<Rightarrow> nom \<Rightarrow> no
 fun mergeNA :: \<open>(nom \<times> 'a) list \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> (nom \<times> 'a) list\<close> where
   \<open>mergeNA [] na nb = []\<close> |
   \<open>mergeNA ((n1,a) # NA) na nb = (if n1 = na then nb else n1, a) # (mergeNA NA na nb)\<close>
-
-primrec mergeP :: \<open>'a hybr_form \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> 'a hybr_form\<close> where
-  \<open>mergeP (Pro a) na nb = Pro a\<close> |
-  \<open>mergeP (Nom n1) na nb = Nom (if n1 = na then nb else n1)\<close> |
-  \<open>mergeP (Neg p) na nb = mergeP p na nb\<close> |
-  \<open>mergeP (Con p1 p2) na nb = Con (mergeP p1 na nb) (mergeP p2 na nb)\<close> |
-  \<open>mergeP (Sat n p) na nb = Sat (if n = na then nb else n) (mergeP p na nb)\<close> |
-  \<open>mergeP (Pos p) na nb = Pos (mergeP p na nb)\<close>
-
-fun mergeNP :: \<open>(nom \<times>('a hybr_form)) list \<Rightarrow> nom \<Rightarrow> nom \<Rightarrow> 
-                 (nom \<times> ('a hybr_form)) list\<close> where
-  \<open>mergeNP [] na nb = []\<close> |
-  \<open>mergeNP ((n1,p) # NP) na nb = (if n1 = na then nb else n1, mergeP p na nb) # (mergeNP NP na nb)\<close>
 
 (*removes all statements about world refrenced by nw
 if other worlds depend on being reached from nw, remove them too
@@ -171,65 +158,74 @@ termination
 (*termination should be straight forward. Need to find out what fails*)
 
 abbreviation purge where \<open>purge X A B Z C \<equiv> purge' X A B Z C [] [] [] [] []\<close>
+  
+fun pvr  where
+  (*@a b on RSH holds if a=b*)
+  \<open>pvr X A ((n1,n2) # B) = (n1 = n2 \<or> pvr X A B)\<close> |
+  (*A proposition on a world holds if it's on both LHS and RHS*)
+  \<open>pvr X ((n,a) # A) [] =(member (Uni,a) X \<or> member (n,a) X \<or> pvr X A [])\<close> |
+  (*If we reach this point, we couldn't show that the sequent is valid*)
+  \<open>pvr _ [] [] = False\<close>
 
-function pvr :: 
-\<open>(nom \<times> 'a) list \<Rightarrow> (nom \<times> 'a) list \<Rightarrow> 
-(nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
-(nom \<times> nom) list \<Rightarrow> (nom \<times> nom) list \<Rightarrow>
-'a hybr_form list \<Rightarrow> 'a hybr_form list 
-\<Rightarrow> bool\<close>
-and witness where
-  (*match formulas on RHS*)
-  \<open>pvr X A Y B Z C Q (Sat n (Pro a) # P)     = pvr X ((n,a) # A) Y B Z C Q P\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n1 (Nom n2) # P)   = pvr X A Y ((n1,n2) # B) Z C Q P\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n (Neg p) # P)     = pvr X A Y B Z C (Sat n p # Q) P\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n (Con p1 p2) # P) =(pvr X A Y B Z C Q (Sat n p1 # P) 
-                                             \<and> pvr X A Y B Z C Q (Sat n p2 # P))\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n1 (Sat n2 p) # P) = pvr X A Y B Z C Q (Sat n2 p # P)\<close> |
-  \<open>pvr X A Y B Z C Q (Sat n (Pos p) # P)     =(let nw = fresh (used X Y Z P \<union> 
-                                                              (used A B C Q)) in
-                                              (pvr X A Y B Z ((n,nw) # C) Q (Sat nw p # P)))\<close> |
-  \<open>pvr X A Y B Z C Q (p # P)                 = pvr X A Y B Z C Q (Sat Uni p # P)\<close> |
-  (*match formulas on LHS*)
-  \<open>pvr X A Y B Z C (Sat n (Pro a) # Q) []    = pvr ((n,a) # X) A Y B Z C Q []\<close> |
-  \<open>pvr X A Y B Z C (Sat n1 (Nom n2) # Q) []  = pvr X A ((n1,n2) # Y) B Z C Q []\<close> |
-  \<open>pvr X A Y B Z C (Sat n (Neg p) # Q) []    = pvr X A Y B Z C Q [Sat n p]\<close> |
-  \<open>pvr X A Y B Z C (Sat n (Con p1 p2) # Q) []= pvr X A Y B Z C (Sat n p1 # (Sat n p2 # Q)) []\<close> |
-  \<open>pvr X A Y B Z C (Sat n1 (Sat n2 p) # Q) []= pvr X A Y B Z C (Sat n2 p # Q) []\<close> |
-  \<open>pvr X A Y B Z C (Sat n (Pos p) # Q) []    =(let nw = fresh (used X Y Z Q \<union> 
-                                                              (used A B C Q)) in
-                                              (pvr X A Y B ((n,nw) # Z) C (Sat nw p # Q) []))\<close> |
-  \<open>pvr X A Y B Z C (p # Q) []                 = pvr X A Y B Z C (Sat Uni p # Q) []\<close> |
+function reach and witness where
   (*merge equal nominals*)
-  \<open>pvr X A ((n1,n2) # Y) B Z C [] [] = pvr (mergeNA X n1 n2) (mergeNA A n1 n2) 
-                                           (mergeNN Y n1 n2) (mergeNN B n1 n2) 
-                                           (mergeNN Z n1 n2) (mergeNN C n1 n2) [] []\<close> |
+  \<open>reach X A ((n1,n2) # Y) B Z C = reach (mergeNA X n1 n2) (mergeNA A n1 n2) 
+                                         (mergeNN Y n1 n2) (mergeNN B n1 n2) 
+                                         (mergeNN Z n1 n2) (mergeNN C n1 n2)\<close> |
 
   (*find witnesses for possibility on RHS. 
    If no witness can be found, purge the node and try with next*)
-  \<open>pvr X A [] B Z ((n,nw) # C) [] [] = (witness X A B Z C (n,nw) \<or>
-                                       (let (X',A',B',Z',C') = purge X A B Z C nw in 
-                                        pvr X' A' [] B' Z' C' [] []))\<close> |
+  \<open>reach X A [] B Z ((n,nw) # C)  = (witness X A B Z Z C (n,nw) 
+                                    @(let (X',A',B',Z',C') = purge X A B Z C nw in 
+                                      reach X' A' [] B' Z' C'))\<close> |
+  \<open>reach X A [] B _ [] = [(X,A,B)]\<close> |
   (*can't find witness if nothing is reachable*)
-  \<open>witness X A B [] C (n,nw) = False\<close> |
+  \<open>witness X A B [] Z2 C (n,nw) = []\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B ((n1,n2) # Z) C (n,nw) = (((n1 = n \<or> n1 = Uni) \<and> pvr X A [(nw,n2)] B Z C [] []) \<or>
-                                            witness X A B Z C (n,nw))\<close> |
-
-  (*@a b on RSH holds if a=b*)
-  \<open>pvr X A [] ((n1,n2) # B) Z [] [] [] = (n1 = n2 \<or> pvr X A [] B Z [] [] [])\<close> |
-  (*A proposition on a world holds if it's on both LHS and RHS*)
-  \<open>pvr X ((n,a) # A) [] [] Z [] [] [] =(member (Uni,a) X \<or> member (n,a) X 
-                                      \<or> pvr X A [] [] Z [] [] [])\<close> |
-  (*If we reach this point, we couldn't show that the sequent is valid*)
-  \<open>pvr _ _ _ _ _ _ _ _  = False\<close>
-                      apply pat_completeness 
-             apply simp_all
+  \<open>witness X A B ((n1,n2) # Z) Z2 C (n,nw) = ((if (n1 = n \<or> n1 = Uni) 
+                                              then reach X A [(nw,n2)] B Z2 C 
+                                              else [])
+                                              @ witness X A B Z Z2 C (n,nw))\<close> 
   sorry
 termination sorry
 
+function atomize where
+  (*match RHS*)
+  \<open>atomize X A Y B Z C Q ((n,Pro a) # P)     = atomize X ((n,a) # A) Y B Z C Q P\<close> |
+  \<open>atomize X A Y B Z C Q ((n1,Nom n2) # P)   = atomize X A Y ((n1,n2) # B) Z C Q P\<close> |
+  \<open>atomize X A Y B Z C Q ((n,Neg p) # P)     = atomize X A Y B Z C ((n,p) # Q) P\<close> |
+  \<open>atomize X A Y B Z C Q ((n,Con p1 p2) # P) =((atomize X A Y B Z C Q ((n,p1) # P)) 
+                                              @ (atomize X A Y B Z C Q ((n,p2) # P)))\<close> |
+  \<open>atomize X A Y B Z C Q ((n1,Sat n2 p) # P) = atomize X A Y B Z C Q ((n2,p) # P)\<close> |
+  \<open>atomize X A Y B Z C Q ((n,Pos p) # P)     =
+          (let nw = fresh (used X Y Z P \<union> (used A B C Q)) in
+          (atomize X A Y B Z ((n,nw) # C) Q ((nw,p) # P)))\<close> |
+  (*match LHS*)
+  \<open>atomize X A Y B Z C ((n,Pro a) # Q) []    = atomize ((n,a) # X) A Y B Z C Q []\<close> |
+  \<open>atomize X A Y B Z C ((n1,Nom n2) # Q) []  = atomize X A ((n1,n2) # Y) B Z C Q []\<close> |
+  \<open>atomize X A Y B Z C ((n,Neg p) # Q) []    = atomize X A Y B Z C Q [(n,p)]\<close> |
+  \<open>atomize X A Y B Z C ((n,Con p1 p2) # Q) []
+        = atomize X A Y B Z C ((n,p1) # (n,p2) # Q) []\<close> |
+  \<open>atomize X A Y B Z C ((n1,Sat n2 p) # Q) []= atomize X A Y B Z C ((n2,p) # Q) []\<close> |
+  \<open>atomize X A Y B Z C ((n,Pos p) # Q) []    =
+          (let nw = fresh (used X Y Z Q \<union> (used A B C Q)) in
+          (atomize X A Y B ((n,nw) # Z) C ((nw,p) # Q) []))\<close> |
+  \<open>atomize X A Y B Z C [] []                  = [(X,A,Y,B,Z,(rev C))]\<close>
+  by pat_completeness auto
+termination sorry
+  (*by (relation \<open>measure (\<lambda>(_,_,_,_,_,_,Q,P). \<Sum>p \<leftarrow> Q @ P. (size p))\<close>) 
+               (auto simp add: Let_def)*)
+
+fun eval2 where
+  \<open>eval2 [] = False\<close> |
+  \<open>eval2 ((X,A,B) # XS) = (pvr X A B \<or> eval2 XS)\<close>
+
+fun eval1 where
+  \<open>eval1 [] = True\<close> |
+  \<open>eval1 ((X,A,Y,B,Z,C) # XS) = (eval2 (reach X A Y B Z C) \<and> eval1 XS)\<close>
+
 (*tautology definition*)
-definition prover where \<open>prover p \<equiv> pvr [] [] [] [] [] [] [] [p]\<close>
+definition prover where \<open>prover p \<equiv> eval1 (atomize [] [] [] [] [] [] [] [(Uni,p)])\<close>
 
 (*abbreviations*)
 abbreviation Imp (infixr "THEN"  180)
@@ -284,6 +280,15 @@ proposition \<open>prover ((AT (Nml 1) (\<diamond> NOM Nml 2)) AND
                      (AT (Nml 2) (\<diamond> NOM Nml 3)) AND 
                      (AT (Nml 3) (Pro A)) THEN 
                      (AT (Nml 1) (\<diamond>(\<diamond> (Pro A)))))\<close>
+  by eval
+
+proposition \<open>prover ((AT (Nml 1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)) THEN (AT (Nml 1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)))\<close>
+  by eval
+
+proposition \<open>prover ((AT (Nml 1) ((NOM Nml 1) AND 
+                     (AT (Nml 2) ((NOM Nml 2) AND 
+                     ((\<box>((Pro A) THEN ((NOT ((Pro A) THEN ((Pro B) THEN (Pro A)))) OR (Pro B)))) 
+                      THEN ((\<box>(Pro A)) THEN \<box> (Pro B))))))))\<close>
   by eval
 
 (*invalid tests*)
