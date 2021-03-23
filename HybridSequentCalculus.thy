@@ -53,16 +53,17 @@ datatype 'a hybr_form
   | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> 110)
   | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> 800)
 
-primrec semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
+primrec semantics :: \<open>'c set \<Rightarrow> ('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
                   (nom \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
-  \<open>semantics R V G w (Pro a) = V w a\<close> |
-  \<open>semantics R V G w (Nom n) = ((G n) = w)\<close> |
-  \<open>semantics R V G w (Neg p) = (\<not> semantics R V G w p)\<close> |
-  \<open>semantics R V G w (Con p1 p2) = (semantics R V G w p1 \<and> semantics R V G w p2)\<close> |
-  \<open>semantics R V G w (Sat n p) = semantics R V G (G n) p\<close> |
-  \<open>semantics R V G w (Pos p) = (\<exists>v. (R w v) \<and> (semantics R V G v p))\<close>
+  \<open>semantics W R V G w (Pro a) = V w a\<close> |
+  \<open>semantics W R V G w (Nom n) = ((G n) = w)\<close> |
+  \<open>semantics W R V G w (Neg p) = (\<not> semantics W R V G w p)\<close> |
+  \<open>semantics W R V G w (Con p1 p2) = (semantics W R V G w p1 \<and> semantics W R V G w p2)\<close> |
+  \<open>semantics W R V G w (Sat n p) = semantics W R V G (G n) p\<close> |
+  \<open>semantics W R V G w (Pos p) = (\<exists>v \<in> W. (R w v) \<and> (semantics W R V G v p))\<close>
 
-abbreviation \<open>sc X Y R V G w \<equiv> (\<forall> x \<in> X. semantics R V G w x) \<longrightarrow> (\<exists> y \<in> Y. semantics R V G w y)\<close>
+abbreviation \<open>sc W X Y R V G w \<equiv> 
+  (\<forall> x \<in> X. semantics W R V G w x) \<longrightarrow> (\<exists> y \<in> Y. semantics W R V G w y)\<close>
 
 (*find the maximal nominal in a list of nominals, and return one bigger than that*)
 (*since nominals has linear order now we could just look at last element instead*)
@@ -317,7 +318,8 @@ NOT (Pro A AND Pro A) AND (Pro C THEN Pro B) AND
 ))\<close> by eval
 
 proposition \<open>\<not>(prover (
-(\<diamond>(Pro A)) AND (\<diamond>((Pro A) AND (\<diamond>(Pro A)))) AND (\<box>((Pro A) AND (\<diamond>(Pro A)) AND (\<diamond>((\<diamond>(NOT (Pro A))) AND (\<box>(Pro B)))))) AND
+(\<diamond>(Pro A)) AND (\<diamond>((Pro A) AND (\<diamond>(Pro A)))) AND (\<box>((Pro A) AND (\<diamond>(Pro A)) AND
+ (\<diamond>((\<diamond>(NOT (Pro A))) AND (\<box>(Pro B)))))) AND
 (\<box>(NOT Pro B)) AND ((Pro A) IFF (Pro C)) AND (\<box>((Pro A) IFF (Pro C))) AND
 ((Pro K) OR (Pro L) OR (Pro M) OR (Pro N) OR (Pro F)) AND
 ((NOT Pro K) OR (NOT Pro L) OR (NOT Pro M)) AND
