@@ -38,19 +38,18 @@ primrec hybr_semantics :: \<open>'c set \<Rightarrow> ('c \<Rightarrow> 'c \<Rig
 
 datatype 'a fol_form
   = Apply 'a nat
-  | Rel nat nat
   | Eq nat nat 
   | FNeg \<open>'a fol_form\<close>
   | FCon \<open>'a fol_form\<close> \<open>'a fol_form\<close>
-  | Ex nat \<open>'a fol_form\<close>
+  | ExRel nat nat \<open>'a fol_form\<close>
 
 primrec fol_semantics where
   \<open>fol_semantics W R V G (Apply a n) = V (G n) a\<close> |
-  \<open>fol_semantics W R V G (Rel n1 n2) = R (G n1) (G n2)\<close> |
   \<open>fol_semantics W R V G (Eq n1 n2) = ((G n1) = (G n2))\<close> |
   \<open>fol_semantics W R V G (FNeg p) = (\<not> fol_semantics W R V G p)\<close> |
   \<open>fol_semantics W R V G (FCon p1 p2) = (fol_semantics W R V G p1 \<and> fol_semantics W R V G p2)\<close> |
-  \<open>fol_semantics W R V G (Ex n p) = (\<exists> w \<in> W. fol_semantics W R V (almostAgree G n w) p)\<close>
+  \<open>fol_semantics W R V G (ExRel n1 n2 p) = 
+    (\<exists> w \<in> W. R (G n1) w \<and> fol_semantics W R V (almostAgree G n2 w) p)\<close>
 
 primrec ST where
   \<open>ST n (Pro a) nxt = Apply a n\<close> |
@@ -58,16 +57,22 @@ primrec ST where
   \<open>ST n (HNeg p) nxt = FNeg (ST n p nxt)\<close> |
   \<open>ST n (HCon p1 p2) nxt = FCon (ST n p1 nxt) (ST n p2 nxt)\<close> |
   \<open>ST n1 (Sat n2 p) nxt = ST n2 p nxt\<close> |
-  \<open>ST n (Pos p) nxt = Ex nxt (FCon (Rel n nxt) (ST nxt p (Suc nxt)))\<close>
+  \<open>ST n (Pos p) nxt = ExRel n nxt (ST nxt p (Suc nxt))\<close>
 
-definition consistent where \<open>consistent W R G w \<equiv>
-  (\<forall> w1 w2. R w1 w2 \<longrightarrow> w1 \<in> W \<and> w2 \<in> W) \<and> (\<forall> w1. (\<exists> n. G n = w1) \<longrightarrow> w1 \<in> W) \<and> (w \<in> W)\<close>
-
-lemma main: \<open>hybr_semantics W R V G w p 
- = fol_semantics W R V (almostAgree G (maxNom p 0 + 1) w) (ST (maxNom p 0 + 1) p (maxNom p 0 + 2))\<close>
+theorem correctST: \<open>hybr_semantics W R V G w p 
+ = fol_semantics W R V (almostAgree G (Suc (maxNom p 0 + 1)) w) 
+    (ST (Suc (maxNom p 0)) p (Suc (Suc (maxNom p 0))))\<close>
   sorry
 
+primrec HT :: \<open>'a fol_form \<Rightarrow> 'a hybr_form\<close> where
+  \<open>HT (Apply a n) = Sat n (Pro a)\<close> |
+  \<open>HT (Eq n1 n2) = Sat n1 (Nom n2)\<close> |
+  \<open>HT (FNeg p) = HNeg (HT p)\<close> |
+  \<open>HT (FCon p1 p2) = HCon (HT p1) (HT p2)\<close> |
+  \<open>HT (ExRel n1 n2 p) = HCon (Sat n1 (Pos (Nom n2))) (Sat n2 (HT p))\<close>
 
-
+theorem correctHT: \<open>fol_semantics W R V G p 
+  = hybr_semantics W R V G w (HT p)\<close>
+  sorry
 
 end

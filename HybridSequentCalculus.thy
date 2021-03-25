@@ -50,8 +50,8 @@ datatype 'a hybr_form
   | Nom nom (\<open>NOM _\<close> [998] 998)
   | Neg \<open>'a hybr_form\<close> (\<open>NOT _\<close> [900] 900)
   | Con \<open>'a hybr_form\<close> \<open>'a hybr_form\<close> (infixl "AND" 300)
-  | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> 110)
-  | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> 800)
+  | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> [899] 899)
+  | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> [800] 800)
 
 primrec semantics :: \<open>'c set \<Rightarrow> ('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
                   (nom \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
@@ -152,9 +152,8 @@ where
   \<open>purge' [] [] [] [] [] X' A' B' Z' C' nw = (X',A',B',Z',C')\<close> 
 by pat_completeness auto
 termination 
-  apply (relation \<open>measure (\<lambda>(X,A,B,Z,C,_,_,_,_,_,_). 
-                   \<Sum>p \<leftarrow> B @ Z @ C. \<Sum>q \<leftarrow> X @ A. (size p) + (size q))\<close>)
-  apply simp_all
+  apply (relation \<open>measure (\<lambda>(X,A,B,Z,C,_,_,_,_,_,_). size X + size A + size B + size Z + size C)\<close>)
+  try0
   sorry
 (*termination should be straight forward. Need to find out what fails*)
 
@@ -292,6 +291,10 @@ proposition \<open>prover ((AT (Nml 1) ((NOM Nml 1) AND
                       THEN ((\<box>(Pro A)) THEN \<box> (Pro B))))))))\<close>
   by eval
 
+proposition \<open>prover ((AT (Nml 1) (NOT (\<diamond> NOM (Nml 1)))) THEN 
+                    ((AT (Nml 1) (NOM (Nml 2) AND (Pro A))) THEN 
+                     (AT (Nml 1) (NOT (\<diamond> NOM (Nml 2))))))\<close>
+  by eval
 
 (*invalid tests*)
 proposition \<open>\<not>(prover (Pro A))\<close>
