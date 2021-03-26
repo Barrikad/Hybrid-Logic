@@ -15,21 +15,21 @@ lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<c
   by (induct A) simp_all
 
 datatype nom
-  = Uni
+  = Cur
   | Nml nat (\<open>NL _\<close> 999)
 
 (*give nominals linear order. used to convert from set to list*)
 instantiation nom :: linorder
 begin
 fun less_eq_nom where
-  \<open>less_eq_nom Uni n = True\<close> |
-  \<open>less_eq_nom (Nml i) Uni = False\<close> |
+  \<open>less_eq_nom Cur n = True\<close> |
+  \<open>less_eq_nom (Nml i) Cur = False\<close> |
   \<open>less_eq_nom (Nml i1) (Nml i2) = (i1 \<le> i2)\<close>
 
 fun less_nom where
-  \<open>less_nom Uni (Nml i) = True\<close> |
-  \<open>less_nom Uni Uni = False\<close> |
-  \<open>less_nom (Nml i) Uni = False\<close> |
+  \<open>less_nom Cur (Nml i) = True\<close> |
+  \<open>less_nom Cur Cur = False\<close> |
+  \<open>less_nom (Nml i) Cur = False\<close> |
   \<open>less_nom (Nml i1) (Nml i2) = (i1 < i2)\<close>
 
 instance   
@@ -69,7 +69,7 @@ abbreviation \<open>sc W X Y R V G w \<equiv>
 (*since nominals has linear order now we could just look at last element instead*)
 fun nomMax where
   \<open>nomMax [] i = Nml (Suc i)\<close> |
-  \<open>nomMax (Uni # N) i = nomMax N i\<close> |
+  \<open>nomMax (Cur # N) i = nomMax N i\<close> |
   \<open>nomMax (Nml n # N) i = nomMax N (max i n)\<close>
 
 (*return nominal not in a set of nominals*)
@@ -157,7 +157,7 @@ abbreviation purge where \<open>purge X A B Z C \<equiv> purge' X A B Z C [] [] 
 
 fun findAtom where
   \<open>findAtom [] n a = False\<close> |
-  \<open>findAtom ((n1 # XS, b) # X) n2 a = ((b = a \<and> (n1 = n2 \<or> n1 = Uni)) \<or> findAtom X n2 a)\<close>
+  \<open>findAtom ((n1 # XS, b) # X) n2 a = ((b = a \<and> n1 = n2) \<or> findAtom X n2 a)\<close>
   
 fun pvr :: "(nom list \<times> 'a) list \<Rightarrow> (nom list \<times> 'a) list \<Rightarrow> (nom list \<times> nom) list \<Rightarrow> bool" where
   (*@a b on RSH holds if a=b*)
@@ -182,7 +182,7 @@ function reach and witness where
   (*can't find witness if nothing is reachable*)
   \<open>witness X A B C Z2 (XS,nw) [] = []\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B C Z2 (n # XS,nw) ((n1 # YS,n2) # Z) = ((if (n1 = n \<or> n1 = Uni) 
+  \<open>witness X A B C Z2 (n # XS,nw) ((n1 # YS,n2) # Z) = ((if (n1 = n \<or> n1 = Cur) 
                                                   then reach X A B Z2 C [([nw],n2)]
                                                   else [])
                                                   @ witness X A B C Z2 (n # XS,nw) Z)\<close> 
@@ -191,7 +191,7 @@ termination sorry
 
 function atomize where
   (*match RHS*)
-  \<open>atomize X A Y B Z C Q (([], p) # P)            = atomize X A Y B Z C Q (([Uni],p) # P)\<close>|
+  \<open>atomize X A Y B Z C Q (([], p) # P)            = atomize X A Y B Z C Q (([Cur],p) # P)\<close>|
   \<open>atomize X A Y B Z C Q ((n # XS,Pro a) # P)     = atomize X ((n # XS,a) # A) Y B Z C Q P\<close> |
   \<open>atomize X A Y B Z C Q ((n1 # XS,Nom n2) # P)   = atomize X A Y ((n1 # XS,n2) # B) Z C Q P\<close> |
   \<open>atomize X A Y B Z C Q ((n # XS,Neg p) # P)     = atomize X A Y B Z C ((n # XS,p) # Q) P\<close> |
@@ -202,7 +202,7 @@ function atomize where
           (let nw = fresh (used X Y Z ((XS,Pos p) # P) \<union> (used A B C Q)) in
           (atomize X A Y B Z ((n # XS,nw) # C) Q ((nw # n # XS,p) # P)))\<close> |
   (*match LHS*)
-  \<open>atomize X A Y B Z C (([],p) # Q) [] = atomize X A Y B Z C (([Uni],p) # Q) []\<close>|
+  \<open>atomize X A Y B Z C (([],p) # Q) [] = atomize X A Y B Z C (([Cur],p) # Q) []\<close>|
   \<open>atomize X A Y B Z C ((n # XS,Pro a) # Q) []    = atomize ((n # XS,a) # X) A Y B Z C Q []\<close> |
   \<open>atomize X A Y B Z C ((n1 # XS,Nom n2) # Q) []  = atomize X A ((n1 # XS,n2) # Y) B Z C Q []\<close> |
   \<open>atomize X A Y B Z C ((n # XS,Neg p) # Q) []    = atomize X A Y B Z C Q [(n # XS,p)]\<close> |
@@ -256,9 +256,9 @@ proposition \<open>prover (NOT (NOT Pro A AND Pro A))\<close>
 proposition \<open>prover (Pro A THEN (Pro B IFF Pro C) THEN Pro A)\<close>
   by eval
 
-value \<open>pvr [([Uni], B), ([Uni], C), ([Uni], A)] [([Uni], A)] []\<close>
+value \<open>pvr [([Cur], B), ([Cur], C), ([Cur], A)] [([Cur], A)] []\<close>
 
-value \<open>findAtom [([Uni], B), ([Uni], C), ([Uni], A)] Uni A\<close>
+value \<open>findAtom [([Cur], B), ([Cur], C), ([Cur], A)] Cur A\<close>
 
 proposition \<open>prover ((Pro A OR Pro B) AND (Pro A OR NOT Pro B) THEN (Pro A))\<close>
   by eval
@@ -302,6 +302,9 @@ proposition \<open>prover ((AT (Nml 1) (NOT (\<diamond> NOM (Nml 1)))) THEN
                      (AT (Nml 1) (NOT (\<diamond> NOM (Nml 2))))))\<close>
   by eval
 
+proposition \<open>prover ((\<diamond>PRO A) THEN (\<diamond>PRO A))\<close>
+  by eval
+
 (*invalid tests*)
 proposition \<open>\<not>(prover (Pro A))\<close>
   by eval
@@ -339,9 +342,12 @@ proposition \<open>\<not>(prover (
 proposition \<open>\<not>prover ((AT (Nml 2) (Pro A)) THEN (AT (Nml 1) (\<diamond> (AT (Nml 2) (Pro A)))))\<close>
   by eval
 
+proposition \<open>\<not>prover ((Pro A) THEN (Sat (Nml 1) (Pro A)))\<close>
+  by eval
+
 
 (*export*)
-definition \<open>main \<equiv> prover (Sat Uni (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
+definition \<open>main \<equiv> prover (Sat Cur (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
 proposition main by eval
 export_code main in Haskell
 
