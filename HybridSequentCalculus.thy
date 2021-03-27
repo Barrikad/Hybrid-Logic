@@ -14,47 +14,17 @@ primrec member where
 lemma member_iff [iff]: \<open>member m A \<longleftrightarrow> m \<in> set A\<close>
   by (induct A) simp_all
 
-datatype nom
-  = Cur
-  | Nml nat (\<open>NL _\<close> 999)
-
-(*give nominals linear order. used to convert from set to list*)
-instantiation nom :: linorder
-begin
-fun less_eq_nom where
-  \<open>less_eq_nom Cur n = True\<close> |
-  \<open>less_eq_nom (Nml i) Cur = False\<close> |
-  \<open>less_eq_nom (Nml i1) (Nml i2) = (i1 \<le> i2)\<close>
-
-fun less_nom where
-  \<open>less_nom Cur (Nml i) = True\<close> |
-  \<open>less_nom Cur Cur = False\<close> |
-  \<open>less_nom (Nml i) Cur = False\<close> |
-  \<open>less_nom (Nml i1) (Nml i2) = (i1 < i2)\<close>
-
-instance   
-  proof
-    fix x y z :: nom
-    have 1:"(x < y) \<Longrightarrow> (x \<le> y \<and> \<not> y \<le> x)" by (induct x; induct y) simp_all
-    have 2:"(x \<le> y \<and> \<not> y \<le> x) \<Longrightarrow> (x < y)" by (induct x; induct y) simp_all
-    from 1 2 show "(x < y) = (x \<le> y \<and> \<not> y \<le> x)" by fast
-    show "x \<le> x" by (induct x) simp_all
-    show "x \<le> y \<Longrightarrow> y \<le> z \<Longrightarrow> x \<le> z" by (induct x; induct y; induct z) simp_all
-    show "x \<le> y \<Longrightarrow> y \<le> x \<Longrightarrow> x = y" by (induct x; induct y) simp_all
-    show "x \<le> y \<or> y \<le> x" by (induct x; induct y) auto
-  qed
-end
 
 datatype 'a hybr_form 
   =  Pro 'a (\<open>PRO _\<close> [999] 999)
-  | Nom nom (\<open>NOM _\<close> [998] 998)
+  | Nom nat (\<open>NOM _\<close> [998] 998)
   | Neg \<open>'a hybr_form\<close> (\<open>NOT _\<close> [900] 900)
   | Con \<open>'a hybr_form\<close> \<open>'a hybr_form\<close> (infixl "AND" 300)
-  | Sat nom \<open>'a hybr_form\<close> (\<open>AT _ _\<close> [899] 899)
+  | Sat nat \<open>'a hybr_form\<close> (\<open>AT _ _\<close> [899] 899)
   | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> [800] 800)
 
 primrec semantics :: \<open>'c set \<Rightarrow> ('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
-                  (nom \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
+                  (nat \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
   \<open>semantics W R V G w (Pro a) = V w a\<close> |
   \<open>semantics W R V G w (Nom n) = ((G n) = w)\<close> |
   \<open>semantics W R V G w (Neg p) = (\<not> semantics W R V G w p)\<close> |
@@ -68,9 +38,8 @@ abbreviation \<open>sc W X Y R V G w \<equiv>
 (*find the maximal nominal in a list of nominals, and return one bigger than that*)
 (*since nominals has linear order now we could just look at last element instead*)
 fun nomMax where
-  \<open>nomMax [] i = Nml (Suc i)\<close> |
-  \<open>nomMax (Cur # N) i = nomMax N i\<close> |
-  \<open>nomMax (Nml n # N) i = nomMax N (max i n)\<close>
+  \<open>nomMax [] i = Suc i\<close> |
+  \<open>nomMax (n # N) i = nomMax N (max i n)\<close>
 
 (*return nominal not in a set of nominals*)
 abbreviation fresh where \<open>fresh N \<equiv> nomMax (sorted_list_of_set N) 0\<close>
@@ -88,15 +57,15 @@ primrec nominalsForms where
   \<open>nominalsForms [] = {}\<close> |
   \<open>nominalsForms (x # xs) = nominalsForm x \<union> (nominalsForms xs)\<close>
 
-fun nominalsNN :: \<open>(nom list \<times> nom) list \<Rightarrow> nom set\<close> where
+fun nominalsNN :: \<open>(nat list \<times> nat) list \<Rightarrow> nat set\<close> where
   \<open>nominalsNN [] = {}\<close> |
   \<open>nominalsNN ((XS,n) # NN) = {n} \<union> (set XS) \<union> (nominalsNN NN)\<close>
 
-fun nominalsNA :: \<open>(nom list \<times> 'a) list \<Rightarrow> nom set\<close> where
+fun nominalsNA :: \<open>(nat list \<times> 'a) list \<Rightarrow> nat set\<close> where
   \<open>nominalsNA [] = {}\<close> |
   \<open>nominalsNA ((XS,a) # NA) = (set XS) \<union> nominalsNA NA\<close>
 
-fun nominalsNP :: \<open>(nom list \<times> ('a hybr_form)) list \<Rightarrow> nom set\<close> where
+fun nominalsNP :: \<open>(nat list \<times> ('a hybr_form)) list \<Rightarrow> nat set\<close> where
   \<open>nominalsNP [] = {}\<close> |
   \<open>nominalsNP ((XS,p) # NP) = (set XS) \<union> (nominalsForm p) \<union> (nominalsNP NP)\<close>
 
@@ -118,6 +87,11 @@ fun mergeNN where
 fun mergeNA where
   \<open>mergeNA [] na nb = []\<close> |
   \<open>mergeNA ((XS,a) # NA) na nb = (mergeN XS na nb, a) # (mergeNA NA na nb)\<close>
+
+fun nameCur where
+  \<open>nameCur [] n = []\<close> |
+  \<open>nameCur (([],a) # X) n = ([n],a) # nameCur X n\<close> |
+  \<open>nameCur ((x # XS,a) # X) n = (x # XS,a) # nameCur X n\<close>
 
 (*removes all statements about world refrenced by nw
 if other worlds depend on being reached from nw, remove them too
@@ -155,23 +129,34 @@ termination
 
 abbreviation purge where \<open>purge X A B Z C \<equiv> purge' X A B Z C [] [] [] [] []\<close>
 
+fun match where
+  \<open>match [] [] = True\<close> |
+  \<open>match [] _ = False\<close> |
+  \<open>match _ [] = False\<close> |
+  \<open>match (n1 # XS) (n2 # YS) = (n1 = n2)\<close>
+
 fun findAtom where
   \<open>findAtom [] n a = False\<close> |
+  \<open>findAtom (([], b) # X) n a = findAtom X n a\<close> |
   \<open>findAtom ((n1 # XS, b) # X) n2 a = ((b = a \<and> n1 = n2) \<or> findAtom X n2 a)\<close>
   
-fun pvr :: "(nom list \<times> 'a) list \<Rightarrow> (nom list \<times> 'a) list \<Rightarrow> (nom list \<times> nom) list \<Rightarrow> bool" where
+fun pvr :: "(nat list \<times> 'a) list \<Rightarrow> (nat list \<times> 'a) list \<Rightarrow> (nat list \<times> nat) list \<Rightarrow> bool" where
   (*@a b on RSH holds if a=b*)
+  \<open>pvr X A (([],n) # B) = pvr X A B\<close> |
   \<open>pvr X A ((n1 # XS,n2) # B) = (n1 = n2 \<or> pvr X A B)\<close> |
   (*A proposition on a world holds if it's on both LHS and RHS*)
+  \<open>pvr X (([],a) # A) [] = (member ([],a) X \<or> pvr X A [])\<close> |
   \<open>pvr X ((n # XS,a) # A) [] =(findAtom X n a \<or> pvr X A [])\<close> |
   (*If we reach this point, we couldn't show that the sequent is valid*)
   \<open>pvr _ [] [] = False\<close>
 
 function reach and witness where
   (*merge equal nominals*)
+  \<open>reach X A B Z C (([],n) # Y) = reach (nameCur X n) (nameCur A n) (nameCur B n) 
+                                        (nameCur Z n) (nameCur C n) (nameCur Y n)\<close> |
   \<open>reach X A B Z C ((n1 # XS,n2) # Y) = reach (mergeNA X n1 n2) (mergeNA A n1 n2) 
-                                         (mergeNN B n1 n2) (mergeNN Z n1 n2) 
-                                         (mergeNN C n1 n2) (mergeNN Y n1 n2)\<close> |
+                                              (mergeNN B n1 n2) (mergeNN Z n1 n2) 
+                                              (mergeNN C n1 n2) (mergeNN Y n1 n2)\<close> |
 
   (*find witnesses for possibility on RHS. 
    If no witness can be found, purge the node and try with next*)
@@ -182,36 +167,34 @@ function reach and witness where
   (*can't find witness if nothing is reachable*)
   \<open>witness X A B C Z2 (XS,nw) [] = []\<close> |
   (*if n2 is reachable from n, then check if p holds at n2*)
-  \<open>witness X A B C Z2 (n # XS,nw) ((n1 # YS,n2) # Z) = ((if (n1 = n \<or> n1 = Cur) 
-                                                  then reach X A B Z2 C [([nw],n2)]
-                                                  else [])
-                                                  @ witness X A B C Z2 (n # XS,nw) Z)\<close> 
+  \<open>witness X A B C Z2 (XS,nw) ((YS,n2) # Z) = ((if match XS YS 
+                                                then reach X A B Z2 C [([nw],n2)]
+                                                else [])
+                                                @ witness X A B C Z2 (XS,nw) Z)\<close> 
   by pat_completeness auto
 termination sorry
 
 function atomize where
   (*match RHS*)
-  \<open>atomize X A Y B Z C Q (([], p) # P)            = atomize X A Y B Z C Q (([Cur],p) # P)\<close>|
-  \<open>atomize X A Y B Z C Q ((n # XS,Pro a) # P)     = atomize X ((n # XS,a) # A) Y B Z C Q P\<close> |
-  \<open>atomize X A Y B Z C Q ((n1 # XS,Nom n2) # P)   = atomize X A Y ((n1 # XS,n2) # B) Z C Q P\<close> |
-  \<open>atomize X A Y B Z C Q ((n # XS,Neg p) # P)     = atomize X A Y B Z C ((n # XS,p) # Q) P\<close> |
-  \<open>atomize X A Y B Z C Q ((n # XS,Con p1 p2) # P) =((atomize X A Y B Z C Q ((n # XS,p1) # P)) 
-                                                  @ (atomize X A Y B Z C Q ((n # XS,p2) # P)))\<close> |
-  \<open>atomize X A Y B Z C Q ((n1 # XS,Sat n2 p) # P) = atomize X A Y B Z C Q ((n2 # n1 # XS,p) # P)\<close> |
-  \<open>atomize X A Y B Z C Q ((n # XS,Pos p) # P)     =
+  \<open>atomize X A Y B Z C Q ((XS,Pro a) # P)     = atomize X ((XS,a) # A) Y B Z C Q P\<close> |
+  \<open>atomize X A Y B Z C Q ((XS,Nom n) # P)   = atomize X A Y ((XS,n) # B) Z C Q P\<close> |
+  \<open>atomize X A Y B Z C Q ((XS,Neg p) # P)     = atomize X A Y B Z C ((XS,p) # Q) P\<close> |
+  \<open>atomize X A Y B Z C Q ((XS,Con p1 p2) # P) =((atomize X A Y B Z C Q ((XS,p1) # P)) 
+                                                  @ (atomize X A Y B Z C Q ((XS,p2) # P)))\<close> |
+  \<open>atomize X A Y B Z C Q ((XS,Sat n p) # P) = atomize X A Y B Z C Q ((n # XS,p) # P)\<close> |
+  \<open>atomize X A Y B Z C Q ((XS,Pos p) # P)     =
           (let nw = fresh (used X Y Z ((XS,Pos p) # P) \<union> (used A B C Q)) in
-          (atomize X A Y B Z ((n # XS,nw) # C) Q ((nw # n # XS,p) # P)))\<close> |
+          (atomize X A Y B Z ((XS,nw) # C) Q ((nw # XS,p) # P)))\<close> |
   (*match LHS*)
-  \<open>atomize X A Y B Z C (([],p) # Q) [] = atomize X A Y B Z C (([Cur],p) # Q) []\<close>|
-  \<open>atomize X A Y B Z C ((n # XS,Pro a) # Q) []    = atomize ((n # XS,a) # X) A Y B Z C Q []\<close> |
-  \<open>atomize X A Y B Z C ((n1 # XS,Nom n2) # Q) []  = atomize X A ((n1 # XS,n2) # Y) B Z C Q []\<close> |
-  \<open>atomize X A Y B Z C ((n # XS,Neg p) # Q) []    = atomize X A Y B Z C Q [(n # XS,p)]\<close> |
-  \<open>atomize X A Y B Z C ((n # XS,Con p1 p2) # Q) []
-        = atomize X A Y B Z C ((n # XS,p1) # (n # XS,p2) # Q) []\<close> |
-  \<open>atomize X A Y B Z C ((n1 # XS,Sat n2 p) # Q) []= atomize X A Y B Z C ((n2 # n1 # XS,p) # Q) []\<close> |
-  \<open>atomize X A Y B Z C ((n # XS,Pos p) # Q) []    =
+  \<open>atomize X A Y B Z C ((XS,Pro a) # Q) []    = atomize ((XS,a) # X) A Y B Z C Q []\<close> |
+  \<open>atomize X A Y B Z C ((XS,Nom n) # Q) []  = atomize X A ((XS,n) # Y) B Z C Q []\<close> |
+  \<open>atomize X A Y B Z C ((XS,Neg p) # Q) []    = atomize X A Y B Z C Q [(XS,p)]\<close> |
+  \<open>atomize X A Y B Z C ((XS,Con p1 p2) # Q) []
+        = atomize X A Y B Z C ((XS,p1) # (XS,p2) # Q) []\<close> |
+  \<open>atomize X A Y B Z C ((XS,Sat n p) # Q) []= atomize X A Y B Z C ((n # XS,p) # Q) []\<close> |
+  \<open>atomize X A Y B Z C ((XS,Pos p) # Q) []    =
           (let nw = fresh (used X Y Z Q \<union> (used A B C Q)) in
-          (atomize X A Y B ((n # XS,nw) # Z) C ((nw # n # XS,p) # Q) []))\<close> |
+          (atomize X A Y B ((XS,nw) # Z) C ((nw # XS,p) # Q) []))\<close> |
   \<open>atomize X A Y B Z C [] []                  = [(X,A,Y,B,Z,(rev C))]\<close>
   by pat_completeness auto
 termination sorry
@@ -246,19 +229,18 @@ abbreviation Nes (\<open>\<box> _\<close> 800)
 datatype atoms = A | B | C | D | E | F | G | H | I | J | K | L | M | N 
 
 (*valid tests*)
-proposition \<open>prover (((Sat (Nml 1)  (Pos (Nom (Nml 2)))) AND (Sat (Nml 2) (Pro A))) 
-                     THEN (Sat (Nml 1) (Pos (Pro A))))\<close>
+proposition \<open>prover (((Sat (1)  (Pos (Nom (2)))) AND (Sat (2) (Pro A))) 
+                     THEN (Sat (1) (Pos (Pro A))))\<close>
   by eval
 
 proposition \<open>prover (NOT (NOT Pro A AND Pro A))\<close>
   by eval
 
-proposition \<open>prover (Pro A THEN (Pro B IFF Pro C) THEN Pro A)\<close>
+proposition \<open>prover ((NOM 1 AND PRO A) THEN (AT 1 (PRO A)))\<close>
   by eval
 
-value \<open>pvr [([Cur], B), ([Cur], C), ([Cur], A)] [([Cur], A)] []\<close>
-
-value \<open>findAtom [([Cur], B), ([Cur], C), ([Cur], A)] Cur A\<close>
+proposition \<open>prover (Pro A THEN (Pro B IFF Pro C) THEN Pro A)\<close>
+  by eval
 
 proposition \<open>prover ((Pro A OR Pro B) AND (Pro A OR NOT Pro B) THEN (Pro A))\<close>
   by eval
@@ -273,33 +255,33 @@ THEN ((Pro A AND Pro B) OR (Pro B OR NOT Pro B)) ))
 AND (Pro A OR Pro B) AND (Pro C IFF NOT Pro D)))\<close>
   by eval
 
-proposition \<open>prover (NOT ((AT (Nml 1) (\<diamond> (NOM Nml 2))) 
-             AND (AT (Nml 2) (Pro A)) AND (AT (Nml 1) (\<box> NOT Pro A))))\<close>
+proposition \<open>prover (NOT ((AT (1) (\<diamond> (NOM 2))) 
+             AND (AT (2) (Pro A)) AND (AT (1) (\<box> NOT Pro A))))\<close>
   by eval
 
 proposition \<open>prover 
- ((AT (Nml 1) (\<diamond>(NOM Nml 3))) THEN 
-  ((AT (Nml 2) (Pro A)) OR (AT (Nml 1) (\<diamond> (AT (Nml 2) (NOT Pro A))))))\<close>
+ ((AT (1) (\<diamond>(NOM 3))) THEN 
+  ((AT (2) (Pro A)) OR (AT (1) (\<diamond> (AT (2) (NOT Pro A))))))\<close>
   by eval
 
-proposition \<open>prover ((AT (Nml 1) (\<diamond> NOM Nml 2)) AND
-                     (AT (Nml 2) (\<diamond> NOM Nml 3)) AND 
-                     (AT (Nml 3) (Pro A)) THEN 
-                     (AT (Nml 1) (\<diamond>(\<diamond> (Pro A)))))\<close>
+proposition \<open>prover ((AT (1) (\<diamond> NOM 2)) AND
+                     (AT (2) (\<diamond> NOM 3)) AND 
+                     (AT (3) (Pro A)) THEN 
+                     (AT (1) (\<diamond>(\<diamond> (Pro A)))))\<close>
   by eval
 
-proposition \<open>prover ((AT (Nml 1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)) THEN (AT (Nml 1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)))\<close>
+proposition \<open>prover ((AT (1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)) THEN (AT (1) (\<diamond>\<diamond>\<diamond>\<diamond> Pro A)))\<close>
   by eval
 
-proposition \<open>prover ((AT (Nml 1) ((NOM Nml 1) AND 
-                     (AT (Nml 2) ((NOM Nml 2) AND 
+proposition \<open>prover ((AT (1) ((NOM 1) AND 
+                     (AT (2) ((NOM 2) AND 
                      ((\<box>((Pro A) THEN ((NOT ((Pro A) THEN ((Pro B) THEN (Pro A)))) OR (Pro B)))) 
                       THEN ((\<box>(Pro A)) THEN \<box> (Pro B))))))))\<close>
   by eval
 
-proposition \<open>prover ((AT (Nml 1) (NOT (\<diamond> NOM (Nml 1)))) THEN 
-                    ((AT (Nml 1) (NOM (Nml 2) AND (Pro A))) THEN 
-                     (AT (Nml 1) (NOT (\<diamond> NOM (Nml 2))))))\<close>
+proposition \<open>prover ((AT (1) (NOT (\<diamond> NOM (1)))) THEN 
+                    ((AT (1) (NOM (2) AND (Pro A))) THEN 
+                     (AT (1) (NOT (\<diamond> NOM (2))))))\<close>
   by eval
 
 proposition \<open>prover ((\<diamond>PRO A) THEN (\<diamond>PRO A))\<close>
@@ -315,7 +297,7 @@ proposition \<open>\<not>(prover (Con (Pro A) (Pro A)))\<close>
 proposition \<open>\<not>(prover (Con (Neg (Pro A)) (Pro A)))\<close>
   by eval
 
-proposition \<open>\<not>(prover (Sat (Nml 1) (Con (Neg (Pro A)) (Pro A))))\<close>
+proposition \<open>\<not>(prover (Sat (1) (Con (Neg (Pro A)) (Pro A))))\<close>
   by eval
 
 proposition \<open>\<not>(prover ( 
@@ -325,8 +307,8 @@ proposition \<open>\<not>(prover (
 
 proposition \<open>\<not>(prover ( 
 NOT (Pro A AND Pro A) AND (Pro C THEN Pro B) AND
- (AT (Nml 1) (NOT (NOT Pro E THEN (Pro C OR NOT NOT Pro D)))) AND
- (AT (Nml 2) (AT (Nml 3) (Pro C)))
+ (AT (1) (NOT (NOT Pro E THEN (Pro C OR NOT NOT Pro D)))) AND
+ (AT (2) (AT (3) (Pro C)))
 ))\<close> by eval
 
 proposition \<open>\<not>(prover (
@@ -339,15 +321,15 @@ proposition \<open>\<not>(prover (
 ))\<close> by eval
 
 
-proposition \<open>\<not>prover ((AT (Nml 2) (Pro A)) THEN (AT (Nml 1) (\<diamond> (AT (Nml 2) (Pro A)))))\<close>
+proposition \<open>\<not>prover ((AT (2) (Pro A)) THEN (AT (1) (\<diamond> (AT (2) (Pro A)))))\<close>
   by eval
 
-proposition \<open>\<not>prover ((Pro A) THEN (Sat (Nml 1) (Pro A)))\<close>
+proposition \<open>\<not>prover ((Pro A) THEN (Sat (1) (Pro A)))\<close>
   by eval
 
 
 (*export*)
-definition \<open>main \<equiv> prover (Sat Cur (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
+definition \<open>main \<equiv> prover (Sat 1 (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
 proposition main by eval
 export_code main in Haskell
 
