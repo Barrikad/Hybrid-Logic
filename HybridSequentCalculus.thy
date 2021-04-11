@@ -122,7 +122,7 @@ fun mergeNSNP where
 
 fun find_non_common where
   \<open>find_non_common _ [] = None\<close> |
-  \<open>find_non_common ms (n # ns) = (if \<not>member n ns then Some n else find_non_common ms ns)\<close>
+  \<open>find_non_common ms (n # ns) = (if \<not>member n ms then Some n else find_non_common ms ns)\<close>
 
 fun saturate' where
   \<open>saturate' R' [] ns = None\<close> |
@@ -214,6 +214,9 @@ abbreviation Nes (\<open>\<box> _\<close> 800)
 
 (*tests*)
 datatype atoms = A | B | C | D | E | F | G | H | I | J | K | L | M | N 
+
+
+
 
 (*valid tests*)
 proposition \<open>prover (((Sat (1)  (Pos (Nom (2)))) AND (Sat (2) (Pro A))) 
@@ -340,6 +343,7 @@ proposition \<open>\<not>prover ((Pro A) THEN (Sat (1) (Pro A)))\<close>
 
 proposition \<open>\<not>prover (AT 1 (\<diamond> ((NOT (AT 1 (\<diamond> NOM 2))) OR (PRO A OR NOT PRO A))))\<close>
   by eval
+
 
 (*export*)
 definition \<open>main \<equiv> prover (Sat 1 (Neg (Con (Pro A) (Neg (Pro A)))))\<close>
