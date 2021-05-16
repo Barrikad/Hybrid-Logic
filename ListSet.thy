@@ -216,6 +216,16 @@ proof -
     by simp
 qed
 
+lemma double_union_equal: \<open>
+  set_equal A C \<Longrightarrow> set_equal B D \<Longrightarrow> set_equal (A U B) (C U D)\<close> (is \<open>?A1 \<Longrightarrow> ?A2 \<Longrightarrow> ?C\<close>)
+proof -
+  assume a1:"?A1"
+  assume a2:\<open>?A2\<close>
+  have \<open>set_equal (A U B) (A U D)\<close> 
+    by (meson a2 set_equal_union)
+  then show ?C 
+    by (metis a1 set_equal_iff union_simp)
+qed
 (*\SETEQUAL*)
 
 (*SUBSET*)

@@ -83,7 +83,7 @@ fun nominalsNP where
 
 fun nominalsNSNP where
   \<open>nominalsNSNP [] = []\<close> |
-  \<open>nominalsNSNP ((n,ns,p) # NSNP) = add n (union (union (nominalsForm p) (nominalsNSNP NSNP)) ns)\<close>
+  \<open>nominalsNSNP ((n,ns,p) # NSNP) = nominalsNSNP NSNP U add n (ns U nominalsForm p)\<close>
 
 lemma form_is_set: \<open>is_set (nominalsForm P)\<close>
   apply (induct P)
@@ -112,10 +112,14 @@ lemma NP_is_set: \<open>is_set (nominalsNP NP)\<close>
       union.simps(1) union.simps(2) union_is_set)
 
 lemma NSNP_is_set: \<open>is_set (nominalsNSNP NSNP)\<close>
-  apply (induct NSNP)
-   apply simp
-  by (metis form_is_set list.distinct(1) nominalsNSNP.cases nominalsNSNP.simps(2) 
-      union.simps(1) union.simps(2) union_is_set)
+proof (induct NSNP)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a NSNP)
+  then show ?case 
+    by (metis list.discI list.inject nominalsNSNP.elims union_is_set)
+qed
 
 (*merge functions replaces all occurences of a nominal with another.
 Used when two nominals are found to be equal*)
@@ -191,11 +195,52 @@ next
 qed
 
 lemma member_mergeNS: \<open>
-  member n (mergeNS ns n1 n2) \<Longrightarrow> 
-    member n ns \<or> n = n2\<close> 
+  member n (mergeNS ns n1 n2) \<Longrightarrow> member n ns \<or> n = n2\<close> 
   apply (induct ns)
   apply simp
   using ListSet.member.simps(2) list.discI by fastforce
+
+lemma member_mergeNS2: \<open>member n ns \<Longrightarrow> n = n1 \<Longrightarrow> member n2 (mergeNS ns n1 n2)\<close> 
+proof (induct ns)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a ns)
+  show ?case 
+  proof cases
+    assume "a = n1"
+    then show ?thesis 
+      by simp
+  next
+    assume \<open>a \<noteq> n1\<close>
+    then have \<open>member n2 (mergeNS ns n1 n2)\<close> 
+      by (metis Cons.hyps Cons.prems(1) Cons.prems(2) ListSet.member.simps(2))
+    then show ?thesis
+      by simp
+  qed
+qed
+
+lemma member_mergeNS3: \<open>member n ns \<Longrightarrow> n \<noteq> n1 \<Longrightarrow> member n (mergeNS ns n1 n2)\<close> 
+proof (induct ns)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a ns)
+  show ?case 
+  proof cases
+    assume "a = n"
+    then show ?thesis
+      using Cons.prems by simp
+  next
+    assume \<open>a \<noteq> n\<close>
+    then have \<open>member n ns\<close> 
+      by (metis Cons.prems(1) ListSet.member.simps(2))
+    then have \<open>member n (mergeNS ns n1 n2)\<close> 
+      using Cons.hyps Cons.prems(2) by blast
+    then show ?thesis 
+      by simp
+  qed
+qed
 
 lemma sub_setNS: \<open>
   member n2 ns \<Longrightarrow> sub_set (mergeNS ns n1 n2) ns\<close> 
@@ -255,7 +300,9 @@ next
       by (metis "1" ListSet.member.simps(2) 2 add_def nominalsNP.simps(1) 
           nominalsNP.simps(2) union.simps(1))
     then show ?thesis 
-      by (smt (verit, ccfv_SIG) "2" ListSet.member.simps(2) Pair_inject \<open>\<And>thesis. (\<And>n' p'. a = (n', p') \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> add_def list.inject member_mergeP member_sub_set mergeNP.simps(2) nominalsNP.simps(2) sub_set_union1)
+      by (smt (verit, ccfv_SIG) "2" ListSet.member.simps(2) Pair_inject 
+          \<open>\<And>thesis. (\<And>n' p'. a = (n', p') \<Longrightarrow> thesis) \<Longrightarrow> thesis\<close> add_def list.inject 
+          member_mergeP member_sub_set mergeNP.simps(2) nominalsNP.simps(2) sub_set_union1)
   next
     case 2
     then have "member n (nominalsNP np) \<or> n = n2"
@@ -302,7 +349,7 @@ next
   proof cases
     case 1
     then show ?thesis 
-      by (metis Cons.hyps ListSet.member.simps(2) add_def adef nominalsNSNP.simps(2) union_member)
+      by (metis Cons.hyps adef nominalsNSNP.simps(2) union_member)
   next
     case 2
     consider "member n nsm" | "n = nm" | "member n (nominalsForm pm)" 
@@ -311,12 +358,14 @@ next
     then show ?thesis 
     proof cases
       case 1
-      then show ?thesis 
-        using ListSet.member.simps(2) adef madef member_mergeNS union_member by fastforce
+      then show ?thesis
+        by (smt (verit, ccfv_threshold) ListSet.member.simps(2) Pair_inject add_def adef 
+            list.inject madef member_mergeNS mergeNSNP.simps(2) nominalsNSNP.simps(2) union_member)
     next
       case 2
       then show ?thesis 
-        using ListSet.member.simps(2) adef madef by fastforce
+        by (smt (verit, best) ListSet.member.simps(2) add_def adef madef mergeNSNP.simps(2) 
+            nominalsNSNP.simps(2) nth_Cons_0 old.prod.inject union_member)
     next
       case 3
       then show ?thesis 
@@ -464,24 +513,28 @@ lemma member_mergeNN3:\<open>
       mergeNN.elims nominalsNN.elims)
 
 lemma add_mergeNN:\<open>
-  n = n1 \<Longrightarrow> set_equal (mergeNS (add n ns) n1 n2) (add n2 (mergeNS ns n1 n2))\<close> 
-proof (induct ns)
-  case Nil
-  have "mergeNS (add n []) n1 n2 = mergeNS [n] n1 n2" 
-    by (simp add: add_def)
-  moreover have \<open>... = [n2]\<close> 
-    using Nil.prems by auto
-  ultimately show ?case 
-    by (metis Nil_is_map_conv mergeNS.elims set_equal_append_add)
-next
-  case (Cons a ns)
-  then show ?case sorry
+  n = n1 \<Longrightarrow> set_equal (mergeNS (add n ns) n1 n2) (add n2 (mergeNS ns n1 n2))\<close> (is "?L \<Longrightarrow> ?R")
+proof-
+  assume a:\<open>?L\<close>
+  have "set_equal (mergeNS (add n ns) n1 n2) (mergeNS (n # ns) n1 n2)" 
+    by (meson merge_equal set_equal_append_add set_equal_commutative)
+  moreover have \<open>... = n2 # mergeNS ns n1 n2\<close> 
+    by (simp add: a)
+  ultimately show \<open>?R\<close>
+    by (metis set_equal_append_add set_equal_iff)
 qed
 
 lemma add_mergeNN2:\<open>
-  n \<noteq> n1 \<Longrightarrow> set_equal (mergeNS (add n ns) n1 n2) (add n (mergeNS ns n1 n2))\<close> 
-  apply (induct ns)
-  sorry
+  n \<noteq> n1 \<Longrightarrow> set_equal (mergeNS (add n ns) n1 n2) (add n (mergeNS ns n1 n2))\<close> (is "?L \<Longrightarrow> ?R")
+proof-
+  assume a:\<open>?L\<close>
+  have "set_equal (mergeNS (add n ns) n1 n2) (mergeNS (n # ns) n1 n2)" 
+    by (meson merge_equal set_equal_append_add set_equal_commutative)
+  moreover have \<open>... = n # mergeNS ns n1 n2\<close> 
+    by (simp add: a)
+  ultimately show "?R" 
+    by (metis set_equal_append_add set_equal_iff)
+qed
 
 lemma merge_nomNN: \<open>set_equal (mergeNS (nominalsNN nn) n1 n2) (nominalsNN (mergeNN nn n1 n2))\<close> 
 proof (induct nn)
@@ -511,19 +564,160 @@ next
       using 11 12 by force
   next
     case 2
-    then show ?thesis sorry
+    then have "mergeNN (a # nn) n1 n2 = (n2,nb) # mergeNN nn n1 n2" 
+      by (simp add: adef)
+    then have \<open>
+      nominalsNN (mergeNN (a # nn) n1 n2) = add n2 (add nb (nominalsNN (mergeNN nn n1 n2)))\<close> 
+      by (metis nominalsNN.simps(2))
+    moreover have \<open>
+      set_equal ... 
+        (add n2 (add nb (mergeNS (nominalsNN nn) n1 n2)))\<close> 
+      by (meson Cons.hyps equal_add set_equal_commutative)
+    moreover have "
+      set_equal ... (add n2 (mergeNS (add nb (nominalsNN nn)) n1 n2))" 
+      by (meson "2" add_mergeNN2 equal_add set_equal_commutative)
+    ultimately show ?thesis 
+      by (metis "2" add_mergeNN adef nominalsNN.simps(2) set_equal_iff)
   next
     case 3
-    then show ?thesis sorry
+    then have "mergeNN (a # nn) n1 n2 = (na,n2) # mergeNN nn n1 n2" 
+      by (simp add: adef)
+    then have \<open>
+      nominalsNN (mergeNN (a # nn) n1 n2) = add na (add n2 (nominalsNN (mergeNN nn n1 n2)))\<close> 
+      by (metis nominalsNN.simps(2))
+    moreover have \<open>set_equal ... (add na (add n2 (mergeNS (nominalsNN nn) n1 n2))) \<close> 
+      by (meson Cons.hyps equal_add set_equal_commutative)
+    moreover have \<open>set_equal ... (add na (mergeNS (add n1 (nominalsNN nn)) n1 n2))\<close> 
+      by (meson add_mergeNN equal_add set_equal_commutative)
+    ultimately show ?thesis 
+      by (metis "3" add_mergeNN2 adef nominalsNN.simps(2) set_equal_iff)
   next
     case 4
-    then show ?thesis sorry
+    then have "mergeNN (a # nn) n1 n2 = (na,nb) # mergeNN nn n1 n2" 
+      by (simp add: adef)
+    then have \<open>
+      nominalsNN (mergeNN (a # nn) n1 n2) = add na (add nb (nominalsNN (mergeNN nn n1 n2)))\<close> 
+      by (metis nominalsNN.simps(2))
+    moreover have \<open>set_equal ... (add na (add nb (mergeNS (nominalsNN nn) n1 n2))) \<close> 
+      by (meson Cons.hyps equal_add set_equal_commutative)
+    moreover have \<open>set_equal ... (add na (mergeNS (add nb (nominalsNN nn)) n1 n2))\<close> 
+      by (meson "4" add_mergeNN2 equal_add set_equal_commutative)
+    ultimately show ?thesis 
+      by (metis "4" add_mergeNN2 adef nominalsNN.simps(2) set_equal_iff)
   qed
 qed
 
-lemma merge_nomNP: \<open>set_equal (mergeNS (nominalsNP np) n1 n2) (nominalsNP (mergeNP np n1 n2))\<close> sorry
+lemma merge_nomP: \<open>set_equal (mergeNS (nominalsForm p) n1 n2) (nominalsForm (mergeP p n1 n2))\<close>
+proof (induct p)
+  case (Con p1 p2)
+  have \<open>
+    set_equal (mergeNS (nominalsForm (p1 AND p2)) n1 n2) 
+      (mergeNS (nominalsForm p1 U nominalsForm p2) n1 n2)\<close> 
+    by simp
+  moreover have \<open>set_equal ... (mergeNS (nominalsForm p1) n1 n2 U mergeNS (nominalsForm p2) n1 n2)\<close> 
+    by (meson merge_union set_equal_commutative)
+  moreover have \<open>set_equal ... (nominalsForm (mergeP p1 n1 n2) U nominalsForm (mergeP p2 n1 n2))\<close>
+    by (meson Con.hyps(1) Con.hyps(2) double_union_equal)
+  ultimately show ?case 
+    by (metis mergeP.simps(4) nominalsForm.simps(4) set_equal_iff)
+next
+  case (Sat n p)
+  then show ?case 
+    by (smt (verit, ccfv_SIG) add_mergeNN add_mergeNN2 equal_add mergeP.simps(5) 
+        nominalsForm.simps(5) set_equal_iff)
+qed auto
+ 
+lemma merge_nomNP: \<open>set_equal (mergeNS (nominalsNP np) n1 n2) (nominalsNP (mergeNP np n1 n2))\<close> 
+proof (induct np)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a np)
+  obtain n p where adef:\<open>a = (n,p)\<close> 
+    by (meson prod.exhaust_sel)
+  then have \<open>
+    mergeNS (nominalsNP (a # np)) n1 n2 = (mergeNS (add n (nominalsForm p U nominalsNP np)) n1 n2)\<close>
+    (is \<open>?mnL = ?mnR\<close>)
+    using adef by simp
+  show ?case 
+  proof cases
+    assume a:\<open>n = n1\<close>
+    then have \<open>set_equal ?mnR (add n2 (mergeNS (nominalsForm p U nominalsNP np) n1 n2))\<close> 
+      by (metis add_mergeNN)
+    moreover have \<open>
+      set_equal ... (add n2 (mergeNS (nominalsForm p) n1 n2 U mergeNS (nominalsNP np) n1 n2))\<close>
+      by (meson equal_add merge_union set_equal_commutative)
+    moreover have \<open>
+      set_equal ... (add n2 (nominalsForm (mergeP p n1 n2) U nominalsNP (mergeNP np n1 n2)))\<close> 
+      by (meson Cons.hyps double_union_equal equal_add merge_nomP)
+    ultimately show ?thesis 
+      by (simp add: a adef)
+  next
+    assume a:\<open>n \<noteq> n1\<close>
+    then have \<open>set_equal ?mnR (add n (mergeNS (nominalsForm p U nominalsNP np) n1 n2))\<close> 
+      by (meson add_mergeNN2)
+    moreover have \<open>
+      set_equal ... (add n (mergeNS (nominalsForm p) n1 n2 U mergeNS (nominalsNP np) n1 n2))\<close>
+      by (meson equal_add merge_union set_equal_commutative)
+    moreover have \<open>
+      set_equal ... (add n (nominalsForm (mergeP p n1 n2) U nominalsNP (mergeNP np n1 n2)))\<close> 
+      by (meson Cons.hyps double_union_equal equal_add merge_nomP)
+    ultimately show ?thesis 
+      by (simp add: a adef)
+  qed
+qed
 
-lemma merge_nomNSNP: \<open>set_equal (mergeNS (nominalsNSNP nsnp) n1 n2) (nominalsNSNP (mergeNSNP nsnp n1 n2))\<close> sorry
+lemma merge_nomNSNP: \<open>set_equal (mergeNS (nominalsNSNP nsnp) n1 n2) (nominalsNSNP (mergeNSNP nsnp n1 n2))\<close> 
+proof (induct nsnp)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nsnp)
+  obtain ns n p where adef: \<open>a = (n,ns,p)\<close> 
+    using prod_cases3 by blast
+  then have 1:\<open>
+    mergeNS (nominalsNSNP (a # nsnp)) n1 n2 = 
+      mergeNS (nominalsNSNP nsnp U add n (ns U nominalsForm p)) n1 n2\<close>
+    by simp
+  have 2:\<open>
+    set_equal ... (mergeNS (nominalsNSNP nsnp) n1 n2 U mergeNS (add n (ns U nominalsForm p)) n1 n2)\<close>
+    (is \<open>set_equal ?mnL ?mnR\<close>)
+    by (meson merge_union set_equal_commutative)
+  show ?case 
+  proof cases
+    assume a:"n = n1"
+    then have \<open>
+      set_equal ?mnR (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n2 (mergeNS (ns U nominalsForm p) n1 n2))\<close> 
+      by (metis Cons.hyps  add_mergeNN double_union_equal)
+    moreover have \<open>
+      set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n2 (mergeNS ns n1 n2 U mergeNS (nominalsForm p) n1 n2))\<close> 
+      by (metis equal_add merge_union set_equal_commutative set_equal_union)
+    moreover have \<open>
+      set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n2 (mergeNS ns n1 n2 U nominalsForm (mergeP p n1 n2)))\<close> 
+      by (meson equal_add merge_nomP set_equal_union)
+    ultimately show ?thesis 
+      using "2" a adef by force
+  next
+    assume a:"n \<noteq> n1"
+    then have \<open>
+      set_equal ?mnR (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n (mergeNS (ns U nominalsForm p) n1 n2))\<close> 
+      by (meson Cons.hyps add_mergeNN2 double_union_equal)
+    moreover have \<open>
+      set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n (mergeNS ns n1 n2 U mergeNS (nominalsForm p) n1 n2))\<close> 
+      by (metis equal_add merge_union set_equal_commutative set_equal_union)
+    moreover have \<open>
+      set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
+        add n (mergeNS ns n1 n2 U nominalsForm (mergeP p n1 n2)))\<close> 
+      by (meson equal_add merge_nomP set_equal_union)
+    ultimately show ?thesis 
+      using "2" a adef by force
+  qed
+qed
 
 lemma merge_noms: \<open>
   set_equal 
@@ -1076,7 +1270,113 @@ next
         add_mono_thms_linordered_semiring(1) missing.simps(2) missing_sub_set1)
 qed
 
-lemma missing_merge: \<open>missing (mergeNSNP R n1 n2) (mergeNS ns n1 n2) \<le> missing R ns\<close> sorry
+lemma missing_naught: \<open>missing R [] = 0\<close> 
+proof (induct R)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a R)
+  obtain u1 ns u2 where \<open>a = (u1,ns,u2)\<close> 
+    using prod_cases3 by blast
+  then show ?case 
+    by (simp add: Cons.hyps)
+qed
+
+lemma missing_merge1: \<open>missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2) \<le> missing' ms ns\<close>
+proof (induct ns)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons n ns)
+  then show ?case 
+  proof cases
+    assume a1:\<open>n = n1\<close>
+    show ?thesis 
+    proof cases
+      assume a2:\<open>member n ms\<close>
+      moreover have "member n2 (mergeNS ms n1 n2)" using a1 a2
+        by (metis member_mergeNS2)
+      moreover have \<open>
+        missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) = 
+        missing' (mergeNS ms n1 n2) (n2 # (mergeNS ns n1 n2))\<close> 
+        by (simp add: a1)
+      ultimately show ?thesis 
+        by (metis Cons.hyps missing'.simps(2))
+    next
+      assume a2:\<open>\<not> member n ms\<close>
+      then have 1:\<open>missing' ms (n # ns) = 1 + missing' ms ns\<close> by simp
+      show ?thesis 
+      proof cases
+        assume a3:\<open>member n2 (mergeNS ms n1 n2)\<close>
+        from this a1 have \<open>
+          missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) = 
+          missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2)\<close> 
+          by simp
+        then show ?thesis 
+          by (metis "1" Cons.hyps add_increasing zero_le_one)
+      next
+        assume a3:\<open>\<not>member n2 (mergeNS ms n1 n2)\<close>
+        then have \<open>
+          missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) = 
+          1 + missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2)\<close> using a1 by simp
+        then show ?thesis
+          using "1" Cons.hyps by linarith
+      qed
+    qed
+  next
+    assume a1:\<open>n \<noteq> n1\<close>
+    show ?thesis 
+    proof cases
+      assume a2:\<open>member n ms\<close>
+      then have 1:\<open>missing' ms (n # ns) = missing' ms ns\<close> by simp
+      have \<open>member n (mergeNS ms n1 n2)\<close> using a2
+        by (meson a1 member_mergeNS3)
+      then have \<open>
+        missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) = 
+        missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2)\<close> 
+        by auto
+      then show ?thesis
+        using Cons.hyps 1 by linarith
+    next
+      assume a2:\<open>\<not> member n ms\<close>
+      then have 1:\<open>missing' ms (n # ns) = 1 + missing' ms ns\<close> by simp
+      show ?thesis 
+      proof cases
+        assume "member n (mergeNS ms n1 n2)"
+        then have \<open>
+          missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) =
+          missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2)\<close> 
+          by auto
+        then show ?thesis
+          using "1" Cons.hyps by presburger
+      next
+        assume "\<not>member n (mergeNS ms n1 n2)"
+        then have \<open>
+          missing' (mergeNS ms n1 n2) (mergeNS (n # ns) n1 n2) =
+          1 + missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2)\<close> 
+          using a1 by auto
+        then show ?thesis 
+          using "1" Cons.hyps by linarith
+      qed
+    qed
+  qed
+qed
+  
+
+lemma missing_merge: \<open>missing (mergeNSNP R n1 n2) (mergeNS ns n1 n2) \<le> missing R ns\<close> 
+proof (induct R)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons umsu R)
+  obtain u1 ms u2 where msdef: \<open>umsu = (u1,ms,u2)\<close> 
+    using prod_cases3 by blast
+  have \<open>missing' (mergeNS ms n1 n2) (mergeNS ns n1 n2) \<le> missing' ms ns\<close> 
+    using missing_merge1 by simp
+  then show ?case 
+    using Cons.hyps msdef by auto
+qed
+
 
 (*Check if any of the pairs in a list contains two of the same element*)
 fun reflect where
@@ -1303,17 +1603,99 @@ lemma sum_suc: "(\<Sum>(u, u', p)\<leftarrow>R. Suc (f p)) = (\<Sum>(u, u', p)\<
 lemma missing_less: \<open>missing' ms ns \<le> length ns\<close>
   by (induct ns)  auto
 
+lemma merge_size_atom:\<open>ns \<le> ns' \<Longrightarrow> R \<le> R' \<Longrightarrow> ps \<le> ps' \<Longrightarrow>
+  size_atom_form ps R ns (mergeP p n1 n2) \<le> 
+  size_atom_form ps' R' ns' p\<close> 
+  by (induct p) simp_all
+
 lemma merge_n1_0: \<open>length ns \<le> length ns' \<Longrightarrow> length R \<le> length R' \<Longrightarrow> ps \<le> ps' \<Longrightarrow>
   n1_0 (mergeNP Q n1 n2) ps R ns \<le> n1_0 Q ps' R' ns'\<close> 
-  apply (induct Q) 
-  apply simp
-  sorry
+proof (induct Q)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a Q)
+  obtain u p where adef:\<open>a = (u,p)\<close>
+    by (meson prod.exhaust_sel)
+  then have \<open>
+    n1_0 (mergeNP (a # Q) n1 n2) ps R ns = 
+    size_atom_form ps (length R) (length ns) (mergeP p n1 n2) + n1_0 (mergeNP Q n1 n2) ps R ns\<close> 
+    by force
+  moreover have \<open>
+    n1_0 (a # Q) ps' R' ns' = 
+    size_atom_form ps' (length R') (length ns') p + n1_0 Q ps' R' ns'\<close> 
+    using adef by force
+  moreover have \<open>
+    size_atom_form ps (length R) (length ns) (mergeP p n1 n2) \<le>
+    size_atom_form ps' (length R') (length ns') p\<close>
+    using merge_size_atom Cons.prems 
+    by blast
+  moreover have \<open>n1_0 (mergeNP Q n1 n2) ps R ns \<le> n1_0 Q ps' R' ns'\<close> 
+    using Cons.hyps Cons.prems(1) Cons.prems(2) Cons.prems(3) by auto
+  ultimately show ?case 
+    by linarith
+qed 
+
+lemma merge_n2_0_1:\<open>ns \<le> ns' \<Longrightarrow> ps \<le> ps' \<Longrightarrow> 
+  (\<Sum>(u, u', p')\<leftarrow> (mergeNSNP R n1 n2). Suc (size_atom_form ps lR ns p')) \<le> 
+  (\<Sum>(u, u', p')\<leftarrow> R. Suc (size_atom_form ps' lR ns' p'))\<close> 
+proof (induct R)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a R)
+  obtain u u' p where adef:\<open>a = (u,u',p)\<close>
+    using prod_cases3 by blast
+  then obtain u1 u2 where 
+    udef:\<open>(u1,u2,mergeP p n1 n2) # (mergeNSNP R n1 n2) = (mergeNSNP (a # R) n1 n2)\<close>
+    by simp
+  have 1: \<open>
+    Suc (size_atom_form ps lR ns (mergeP p n1 n2)) \<le>
+    Suc (size_atom_form ps' lR ns' p)\<close>
+    using Cons.prems merge_size_atom 
+    by force
+  have \<open>
+    (\<Sum>(u, u', p')\<leftarrow>mergeNSNP (a # R) n1 n2. Suc (size_atom_form ps lR ns p')) =
+    (\<Sum>(u, u', p')\<leftarrow>((u1,u2,mergeP p n1 n2) # mergeNSNP R n1 n2). Suc (size_atom_form ps lR ns p'))\<close>
+    using udef by simp
+  moreover have \<open>
+    ... = Suc (size_atom_form ps lR ns (mergeP p n1 n2)) + 
+      (\<Sum>(u, u', p')\<leftarrow>mergeNSNP R n1 n2. Suc (size_atom_form ps lR ns p'))\<close>  
+    by simp
+  moreover have \<open>
+    ... \<le> Suc (size_atom_form ps' lR ns' p) + 
+      (\<Sum>(u, u', p')\<leftarrow>R. Suc (size_atom_form ps' lR ns' p'))\<close> 
+    using "1" Cons.hyps Cons.prems(1) Cons.prems(2) by linarith
+  moreover have \<open>
+    ... = (\<Sum>(u, u', p')\<leftarrow> ((u,u',p) # R). Suc (size_atom_form ps' lR ns' p'))\<close> 
+    by simp
+  moreover have \<open>
+    ... = (\<Sum>(u, u', p')\<leftarrow> (a # R). Suc (size_atom_form ps' lR ns' p'))\<close> 
+    using adef by simp
+  ultimately show ?case by simp
+qed
+
 
 lemma merge_n2_0: \<open>length ns \<le> length ns' \<Longrightarrow> ps \<le> ps' \<Longrightarrow> 
-  n2_0 ps (mergeNSNP R n1 n2) ns \<le> n2_0 ps' R ns'\<close>
-  apply (induct R)
-   apply simp
-  sorry
+  n2_0 ps (mergeNSNP R n1 n2) ns \<le> n2_0 ps' R ns'\<close> (is "?P1 \<Longrightarrow> ?P2 \<Longrightarrow> ?C")
+proof-
+  assume a1:"?P1"
+  assume a2:\<open>?P2\<close>
+  have \<open>length (mergeNSNP R n1 n2) = length R\<close> 
+    by (metis merge_lengthNSNP)
+  then have "
+    n2_0 ps (mergeNSNP R n1 n2) ns = 
+    (\<Sum>(u, u', p)\<leftarrow>(mergeNSNP R n1 n2). Suc (size_atom_form ps (length R) (length ns) p))"
+    by simp
+  moreover have \<open>
+    ... \<le> (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps' (length R) (length ns') p))\<close>
+    using a1 a2 merge_n2_0_1 by force
+  moreover have \<open>
+    ... = n2_0 ps' R ns'\<close> 
+    by simp
+  ultimately show ?C 
+    by simp
+qed
 
 termination
   apply (relation \<open>measure (
@@ -1772,7 +2154,7 @@ next
             (add n1 (add n2 (nominalsForm p U (ns_0 LA RA RN LP RP R Q P))))\<close>
         apply simp
         by (smt (z3) Un_insert_left add_simp sup_assoc sup_left_commute union_simp)
-      moreover then have \<open>sub_set (add n2 (nominalsForm p U (ns_0 LA RA RN LP RP R Q P))) ...\<close>
+      moreover have \<open>sub_set (add n2 (nominalsForm p U (ns_0 LA RA RN LP RP R Q P))) ...\<close>
         by (metis sub_set_union1 union.simps(1) union.simps(2))
       ultimately show ?thesis 
         by simp
@@ -1830,7 +2212,7 @@ next
   fix p :: \<open>'a hybr_form\<close>
   let ?ns = "\<lambda> LA RA RN LP RP R Q n p P.
     nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
-    nominalsNN RP U add n (nominalsForm p U nominalsNSNP R) U nominalsNP Q U nominalsNP P"
+    nominalsNN RP U (nominalsNSNP R U add n ([] U nominalsForm p)) U nominalsNP Q U nominalsNP P"
   let ?ms = "\<lambda> LA RA RN LP RP R Q n p P.
     nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
     nominalsNSNP R U nominalsNP Q U add n (nominalsForm p U nominalsNP P)"
@@ -1863,9 +2245,12 @@ next
                               (?ms LA RA RN LP RP R Q n p P)" 
     proof -
       have \<open>set_equal (?ns LA RA RN LP RP R Q n p P) 
-            (add n (nominalsForm p U (ns_0 LA RA RN LP RP R Q P)))\<close>
+        (add n (([] U nominalsForm p) U (ns_0 LA RA RN LP RP R Q P)))\<close>
         apply simp
         by (smt (z3) Un_insert_left add_simp sup_assoc sup_left_commute union_simp)
+      moreover have \<open>set_equal ...
+        (add n (nominalsForm p U (ns_0 LA RA RN LP RP R Q P)))\<close> 
+        by (meson equal_add set_equal_union2 unionaddnt) 
       moreover have \<open>set_equal (?ms LA RA RN LP RP R Q n p P) 
             (add n (nominalsForm p U (ns_0 LA RA RN LP RP R Q P)))\<close>
         apply simp
@@ -2077,6 +2462,7 @@ next
     then show "?show_this" 
       by (metis 1 4 add_le_mono le_imp_less_Suc)
   qed
+next
 qed 
   
 
