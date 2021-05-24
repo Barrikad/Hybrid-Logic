@@ -803,9 +803,6 @@ proof-
     by simp
 qed
 
-lemma merge_lengthNSNP: \<open>length nsnp = length (mergeNSNP nsnp n1 n2)\<close> 
-  by (induct nsnp) auto
-
 lemma nominals_con: \<open>
   R = R1 @ R2 \<Longrightarrow> set_equal (nominalsNSNP R) (nominalsNSNP R1 U nominalsNSNP R2)\<close> 
 proof (induct R1 arbitrary: R)
@@ -926,6 +923,8 @@ qed
 
 lemma sat_iff[iff]: "(\<forall> n ms p. member (n,ms,p) R \<longrightarrow> remove ns ms = []) \<longleftrightarrow> saturate R ns = None"
   using sat_findnt1 sat_findnt2 by blast
+
+hide_fact sat_findnt1 sat_findnt2
 
 lemma sat_R1: "
   saturate' R' R ns = Some (n,m,p,R1,R2) \<longrightarrow> 
@@ -1079,145 +1078,7 @@ lemma addnt[iff]: "
   using addnt1 addnt2 
   by (smt (verit, ccfv_SIG) append_Nil2 sat_R1)
 
-lemma saturate_size1: \<open>
-  saturate R ns = Some (n,m,p,R',R'') \<longrightarrow>
-  Suc (size R') = size R\<close>
-proof (induct R arbitrary: n m p ns R' R'')
-  case Nil
-  then show ?case by simp
-next
-  case (Cons a R)
-  assume a1: "(
-    \<And>n m p ns R' R''.
-    saturate R ns = Some (n, m, p, R', R'') \<longrightarrow>
-    Suc (length R') = length R)"
-  show ?case 
-  proof
-    assume a2: "saturate (a # R) ns = Some (n, m, p, R', R'')"
-    then have "\<exists> n' ms p'. a = (n',ms,p')"
-      by (meson prod_cases3)
-    then obtain n' ms p' where 1: \<open>a = (n',ms,p')\<close> by blast
-    show "Suc (length R') = length (a # R)" 
-    proof cases
-      assume "remove ns ms = []"
-      then have 1:"saturate' [] (a # R) ns = saturate' [a] R ns" using 1 by simp
-      from this a2 have "\<exists> R1 R2. R' = a # R1 \<and> R'' = a # R2" using sat_R1 
-        by (metis append_Cons)
-      then obtain R1 R2 where R1def: "R' = a # R1 \<and> R'' = a # R2" by blast
-      then have "saturate' [] R ns = Some (n, m, p, R1, R2)" 
-        by (metis (no_types, lifting) "1" a2 addnt2 append_Cons self_append_conv2)
-      then show ?thesis using a1
-        using R1def by auto
-    next
-      assume "\<not> remove ns ms = []"
-      then have \<open>\<exists> m' ms'. remove ns ms = m' # ms'\<close> 
-        by (meson list.exhaust)
-      then obtain m' ms' where nsms: "remove ns ms = m' # ms'" by blast
-      from this 1 a2 have 2: \<open>n = n' \<and> m = m' \<and> p = p' \<and> R' = R \<and> R'' = (n',m' # ms,p') # R\<close>
-        by auto
-      then show ?thesis
-        by simp
-    qed
-  qed
-qed
-
-fun missing' where
-  \<open>missing' ms [] = 0\<close> |
-  \<open>missing' ms (n # ns) = (if \<not>member n ms then Suc (missing' ms ns) else missing' ms ns)\<close>
-
-lemma miss1: \<open>missing' (m # ms) ns \<le> missing' ms ns\<close>
-proof (induct ns arbitrary: ms)
-  case Nil
-  then show ?case by simp
-next
-  case (Cons a ns)
-  then show ?case 
-    by (metis member.simps(2) Suc_leD Suc_le_mono missing'.simps(2))
-qed  
-
-lemma miss2: \<open>remove ns ms = m' # ms' \<Longrightarrow> missing' ms ns > missing' (m' # ms) ns\<close>
-proof (induct ns arbitrary: ms m' ms')
-  case Nil
-  then show ?case by simp
-next
-  fix a ns ms m' ms'
-  assume a1: "\<And>ms m' ms'. remove ns ms = m' # ms' \<Longrightarrow> missing' (m' # ms) ns < missing' ms ns"
-  then show "remove (a # ns) ms = m' # ms' \<Longrightarrow> missing' (m' # ms) (a # ns) < missing' ms (a # ns)"
-  proof-
-    assume a2: "remove (a # ns) ms = m' # ms'"
-    show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)"
-    proof cases
-      assume a3: "member a (m' # ms)"
-      then show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)" 
-      proof cases
-        assume am:"a = m'"
-        then have "\<not> member a ms" using a2 remove_simp
-          by (metis Diff_iff list.set_intros(1) member_iff)
-        then show ?thesis using miss1 
-          by (metis Suc_le_lessD Suc_le_mono a3 missing'.simps(2))
-      next
-        assume "\<not>a = m'"
-        then show ?thesis 
-          by (metis member.simps(2) 
-              a1 a2 a3 missing'.simps(2) remove.simps(2))
-      qed
-    next
-      assume "\<not> member a (m' # ms)"
-      then show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)" 
-        by (metis member.simps(2) a2 list.inject remove.simps(2))
-    qed
-  qed
-qed
-
-fun missing :: "('a \<times> nat list \<times>'b) list \<Rightarrow> nat list \<Rightarrow> nat" where
-  \<open>missing [] ns = 0\<close> |
-  \<open>missing ((_,ms,_) # R) ns = missing' ms ns + missing R ns\<close>
-
-lemma miss_plus: \<open>missing (R1 @ R2) ns = missing R1 ns + missing R2 ns\<close>
-  by (induct R1) auto
-
-lemma saturate_size2: \<open>
-  saturate' R1 R ns = Some (n,m,p,R',R'') \<Longrightarrow>
-  missing R'' ns < missing (R1 @ R) ns\<close>
-proof (induct R arbitrary: n m p R1 R' R'')
-  case Nil
-  then show ?case by simp
-next
-  fix a R n m p R1 R' R''
-  assume a1: "
-    \<And>n m p R1 R' R''.
-      saturate' R1 R ns = Some (n, m, p, R', R'') \<Longrightarrow>
-      missing R'' ns < missing (R1 @ R) ns"
-  show "
-    saturate' R1 (a # R) ns = Some (n, m, p, R', R'') \<Longrightarrow>
-       missing R'' ns < missing (R1 @ a # R) ns"
-  proof-
-    assume a2: "saturate' R1 (a # R) ns = Some (n, m, p, R', R'')"
-    then have "\<exists> n' ms p'. a = (n',ms,p')"
-      by (meson prod_cases3)
-    then obtain n' ms p' where adef: \<open>a = (n',ms,p')\<close> by blast
-    show "missing R'' ns < missing (R1 @ a # R) ns" 
-    proof cases
-      assume "remove ns ms = []"
-      then have "saturate' R1 (a # R) ns = saturate' (R1 @ [a]) R ns" using adef by simp
-      then have "missing R'' ns < missing (R1 @ [a] @ R) ns" using a1 a2 
-        by (metis append_assoc)
-      then show ?thesis by simp
-    next
-      assume a3:"\<not> remove ns ms = []"
-      then have \<open>\<exists> m' ms'. remove ns ms = m' # ms'\<close> 
-        by (meson list.exhaust)
-      then obtain m' ms' where nsms: "remove ns ms = m' # ms'" by blast
-      from this adef a2 have 2: \<open>
-        n = n' \<and> m = m' \<and> p = p' \<and> R' = R1 @ R \<and> R'' = R1 @ [(n',m' # ms,p')] @ R\<close>
-        by auto
-      have "missing [(n',m' # ms,p')] ns < missing [(n',ms,p')] ns"
-        by (simp add: miss2 nsms)
-      then show ?thesis 
-        by (simp add: "2" adef miss_plus)
-    qed
-  qed
-qed
+hide_fact addnt1 addnt2
 
 lemma saturate_split: \<open>
   saturate' R3 R ns = Some (n,m,p,R',R'') \<Longrightarrow> 
@@ -1291,6 +1152,306 @@ next
       using "1" rdef by blast
     ultimately show ?thesis 
       using Cons.prems 2 mu_def by auto
+  qed
+qed
+
+lemma saturate_nom_members:\<open>
+  saturate' R2 R ns = Some (n,m,p,R',R'') \<Longrightarrow> member n (nominalsNSNP R) \<and> member m ns\<close> 
+proof (induct R arbitrary: R2 n m p R' R'')
+  case Nil
+  then show ?case by simp
+next
+  case (Cons r R)
+  obtain n' ns' p' where rdef:\<open>r = (n',ns',p')\<close> 
+    using prod_cases3 by blast 
+  consider "remove ns ns' = []" | \<open>\<exists> m ms. remove ns ns' = m # ms\<close> 
+    by (meson list.exhaust)
+  then show ?case 
+  proof cases
+    case 1
+    then have \<open>saturate' R2 (r # R) ns = saturate' (R2 @ [r]) R ns\<close> 
+      using rdef by simp
+    then have \<open>... = Some (n, m, p, R', R'')\<close> 
+      using Cons.prems by auto
+    then have 1:\<open>member n (nominalsNSNP R) \<and> member m ns\<close> 
+      using Cons.hyps by auto
+    then have \<open>member n (nominalsNSNP (r # R)) \<and> member m ns\<close> 
+    proof-
+      have \<open>\<exists> r'. nominalsNSNP (r # R) = nominalsNSNP R U r'\<close> 
+        by (metis nominalsNSNP.simps(2) prod_cases3)
+      then show ?thesis 
+        by (metis "1" union_member)
+    qed
+    then show ?thesis by simp
+  next
+    case 2
+    then obtain m ms where mdef:\<open>remove ns ns' = m # ms\<close>
+      by fast
+    then have \<open>saturate' R2 (r # R) ns = Some (n',m,p',R2 @ R,R2 @ [(n',m # ns',p')] @ R)\<close> 
+      using rdef by simp
+    moreover have \<open>member n' (nominalsNSNP (r # R))\<close> 
+    proof-
+      obtain u where \<open>nominalsNSNP (r # R) = nominalsNSNP R U add n' u\<close>
+        by (simp add: rdef)
+      then show ?thesis
+        by (metis ListSet.member.simps(2) add_def union_member)
+    qed
+    moreover have \<open>member m ns\<close> 
+      by (metis ListSet.member.simps(2) mdef member_sub_set sub_remove_set)
+    ultimately show ?thesis 
+      by (simp add: Cons.prems) 
+  qed
+qed
+
+(*Check if any of the pairs in a list contains two of the same element*)
+fun reflect where
+  \<open>reflect [] = False\<close> |
+  \<open>reflect ((n1,n2) # B) = (n1 = n2 \<or> reflect B)\<close>
+
+(*termination functions*)
+primrec pos_count where 
+  \<open>pos_count (Pro a) = 0\<close> |
+  \<open>pos_count (Nom n) = 0\<close> |
+  \<open>pos_count (Neg p) = pos_count p\<close> |
+  \<open>pos_count (Con p1 p2) = pos_count p1 + pos_count p2\<close> |
+  \<open>pos_count (Sat n p) = pos_count p\<close> |
+  \<open>pos_count (Pos p) = Suc (pos_count p)\<close>
+
+fun pos_countNP where
+  \<open>pos_countNP [] = 0\<close> |                                          
+  \<open>pos_countNP ((_,p) # NP) = pos_count p + pos_countNP NP\<close>
+
+fun pos_countNSNP where
+  \<open>pos_countNSNP [] = 0\<close> |                                          
+  \<open>pos_countNSNP ((_,_,p) # NSNP) = pos_count p + pos_countNSNP NSNP\<close>
+
+
+fun missing' where
+  \<open>missing' ms [] = 0\<close> |
+  \<open>missing' ms (n # ns) = (if \<not>member n ms then Suc (missing' ms ns) else missing' ms ns)\<close>
+
+fun missing :: "('a \<times> nat list \<times>'b) list \<Rightarrow> nat list \<Rightarrow> nat" where
+  \<open>missing [] ns = 0\<close> |
+  \<open>missing ((_,ms,_) # R) ns = missing' ms ns + missing R ns\<close>
+
+(*
+----------EXPLANATION OF PARAMETERS OF ATOMIZE---------
+All parameters are lists of tuples representing formulas of different types
+The first element identifies the nominal at which the formula holds
+
+LA/RA: LHS and RHS atomic non-nominal propositions. Sequent is valid if they share an element
+
+RN: RHS nominal propositions. Sequent is valid if we have @n n. There is no LN because we process 
+    them immediately
+
+LP/RP: LHS and RHS possibility relations between nominals. Sequent is valid if they share an element
+
+R: RHS possibility formulas with potentially complex subformulas. Formulas here can be discharged
+   multiple times with different witnessing nominals
+
+Q/P: LHS and RHS complex formulas.
+*)
+
+function atomize :: \<open>
+  (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow>
+  (nat \<times> (nat list) \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list 
+  \<Rightarrow> bool\<close> where
+  (*match RHS*)
+  \<open>atomize LA RA RN LP RP R Q ((n,Pro a) # P) = 
+    atomize LA ((n,a) # RA) RN LP RP R Q P\<close> |
+
+  \<open>atomize LA RA RN LP RP R Q ((n1,Nom n2) # P) = 
+    atomize LA RA ((n1,n2) # RN) LP RP R Q P\<close> |
+
+  \<open>atomize LA RA RN LP RP R Q ((n,Neg p) # P) = 
+    atomize LA RA RN LP RP R ((n,p) # Q) P\<close> |
+
+  \<open>atomize LA RA RN LP RP R Q ((n,Con p1 p2) # P) =
+    ((atomize LA RA RN LP RP R Q ((n,p1) # P)) \<and> (atomize LA RA RN LP RP R Q ((n,p2) # P)))\<close> |
+
+  \<open>atomize LA RA RN LP RP R Q ((n1,Sat n2 p) # P) = 
+    atomize LA RA RN LP RP R Q ((n2,p) # P)\<close> |
+(*We need to try to find a nominal witnessing Pos later. See last case*)
+  \<open>atomize LA RA RN LP RP R Q ((n,Pos p) # P) = 
+    atomize LA RA RN LP RP ((n,[],p) # R) Q P\<close>|
+
+  (*match LHS*)
+  \<open>atomize LA RA RN LP RP R ((n,Pro a) # Q) [] = 
+    atomize ((n,a) # LA) RA RN LP RP R Q []\<close> |
+(*we assume/assert that n1=n2. therefore, remove one of them*)
+  \<open>atomize LA RA RN LP RP R ((n1,Nom n2) # Q) [] = 
+    atomize (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) 
+      (mergeNN LP n1 n2) (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) []\<close> |
+
+  \<open>atomize LA RA RN LP RP R ((n,Neg p) # Q) [] = 
+    atomize LA RA RN LP RP R Q [(n,p)]\<close> |
+
+  \<open>atomize LA RA RN LP RP R ((n,Con p1 p2) # Q) []= 
+    atomize LA RA RN LP RP R ((n,p1) # (n,p2) # Q) []\<close> |
+
+  \<open>atomize LA RA RN LP RP R ((n1,Sat n2 p) # Q) [] = 
+    atomize LA RA RN LP RP R ((n2,p) # Q) []\<close> |
+
+  \<open>atomize LA RA RN LP RP R ((n,Pos p) # Q) [] = (
+    let nw = fresh (
+      nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP R U nominalsNP ((n,Pos p) # Q)) 
+    in (atomize LA RA RN ((n,nw) # LP) RP R ((nw,p) # Q) []))\<close> |
+(*-------Try all relevant assignments of nominals to possibility on RHS-----------
+If no assignment can be made, check if current sequent is a tautology.
+Else we can process a statement @n\<diamond>P.
+  Find a nominal m to witness the statement
+  Check if the sequent with @n\<diamond>P removed fulfills both @n\<diamond>m and @mP
+Lastly, try another assignment. Remember that we already tried m.*)
+  \<open>atomize LA RA RN LP RP R [] [] = (
+      case 
+        saturate R (
+          nominalsNA LA U nominalsNA RA U nominalsNN RN U 
+          nominalsNN LP U nominalsNN RP U nominalsNSNP R)
+      of
+        None \<Rightarrow> (common LA RA \<or> common LP RP \<or> reflect RN)
+      | Some (n,m,p,R',R'') \<Rightarrow> 
+          (atomize LA RA RN LP ((n,m) # RP) R' [] [] \<and> atomize LA RA RN LP RP R' [] [(m,p)]) 
+          \<or> atomize LA RA RN LP RP R'' [] [])\<close> 
+  by pat_completeness simp_all
+(*size definition for proving termination of atomize*)
+
+context
+begin
+
+lemma merge_lengthNSNP: \<open>length nsnp = length (mergeNSNP nsnp n1 n2)\<close> 
+  by (induct nsnp) auto
+
+lemma saturate_size1: \<open>
+  saturate R ns = Some (n,m,p,R',R'') \<longrightarrow>
+  Suc (size R') = size R\<close>
+proof (induct R arbitrary: n m p ns R' R'')
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a R)
+  assume a1: "(
+    \<And>n m p ns R' R''.
+    saturate R ns = Some (n, m, p, R', R'') \<longrightarrow>
+    Suc (length R') = length R)"
+  show ?case 
+  proof
+    assume a2: "saturate (a # R) ns = Some (n, m, p, R', R'')"
+    then have "\<exists> n' ms p'. a = (n',ms,p')"
+      by (meson prod_cases3)
+    then obtain n' ms p' where 1: \<open>a = (n',ms,p')\<close> by blast
+    show "Suc (length R') = length (a # R)" 
+    proof cases
+      assume "remove ns ms = []"
+      then have 1:"saturate' [] (a # R) ns = saturate' [a] R ns" using 1 by simp
+      from this a2 have "\<exists> R1 R2. R' = a # R1 \<and> R'' = a # R2" using sat_R1 
+        by (metis append_Cons)
+      then obtain R1 R2 where R1def: "R' = a # R1 \<and> R'' = a # R2" by blast
+      then have "saturate' [] R ns = Some (n, m, p, R1, R2)" 
+        by (metis (no_types, lifting) "1" a2 addnt append_Cons self_append_conv2)
+      then show ?thesis using a1
+        using R1def by auto
+    next
+      assume "\<not> remove ns ms = []"
+      then have \<open>\<exists> m' ms'. remove ns ms = m' # ms'\<close> 
+        by (meson list.exhaust)
+      then obtain m' ms' where nsms: "remove ns ms = m' # ms'" by blast
+      from this 1 a2 have 2: \<open>n = n' \<and> m = m' \<and> p = p' \<and> R' = R \<and> R'' = (n',m' # ms,p') # R\<close>
+        by auto
+      then show ?thesis
+        by simp
+    qed
+  qed
+qed
+
+(*missing*)
+lemma miss1: \<open>missing' (m # ms) ns \<le> missing' ms ns\<close>
+proof (induct ns arbitrary: ms)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a ns)
+  then show ?case 
+    by (metis member.simps(2) Suc_leD Suc_le_mono missing'.simps(2))
+qed  
+
+lemma miss2: \<open>remove ns ms = m' # ms' \<Longrightarrow> missing' ms ns > missing' (m' # ms) ns\<close>
+proof (induct ns arbitrary: ms m' ms')
+  case Nil
+  then show ?case by simp
+next
+  fix a ns ms m' ms'
+  assume a1: "\<And>ms m' ms'. remove ns ms = m' # ms' \<Longrightarrow> missing' (m' # ms) ns < missing' ms ns"
+  then show "remove (a # ns) ms = m' # ms' \<Longrightarrow> missing' (m' # ms) (a # ns) < missing' ms (a # ns)"
+  proof-
+    assume a2: "remove (a # ns) ms = m' # ms'"
+    show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)"
+    proof cases
+      assume a3: "member a (m' # ms)"
+      then show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)" 
+      proof cases
+        assume am:"a = m'"
+        then have "\<not> member a ms" using a2 remove_simp
+          by (metis Diff_iff list.set_intros(1) member_iff)
+        then show ?thesis using miss1 
+          by (metis Suc_le_lessD Suc_le_mono a3 missing'.simps(2))
+      next
+        assume "\<not>a = m'"
+        then show ?thesis 
+          by (metis member.simps(2) 
+              a1 a2 a3 missing'.simps(2) remove.simps(2))
+      qed
+    next
+      assume "\<not> member a (m' # ms)"
+      then show "missing' (m' # ms) (a # ns) < missing' ms (a # ns)" 
+        by (metis member.simps(2) a2 list.inject remove.simps(2))
+    qed
+  qed
+qed
+
+lemma miss_plus: \<open>missing (R1 @ R2) ns = missing R1 ns + missing R2 ns\<close>
+  by (induct R1) auto
+
+lemma saturate_size2: \<open>
+  saturate' R1 R ns = Some (n,m,p,R',R'') \<Longrightarrow>
+  missing R'' ns < missing (R1 @ R) ns\<close>
+proof (induct R arbitrary: n m p R1 R' R'')
+  case Nil
+  then show ?case by simp
+next
+  fix a R n m p R1 R' R''
+  assume a1: "
+    \<And>n m p R1 R' R''.
+      saturate' R1 R ns = Some (n, m, p, R', R'') \<Longrightarrow>
+      missing R'' ns < missing (R1 @ R) ns"
+  show "
+    saturate' R1 (a # R) ns = Some (n, m, p, R', R'') \<Longrightarrow>
+       missing R'' ns < missing (R1 @ a # R) ns"
+  proof-
+    assume a2: "saturate' R1 (a # R) ns = Some (n, m, p, R', R'')"
+    then have "\<exists> n' ms p'. a = (n',ms,p')"
+      by (meson prod_cases3)
+    then obtain n' ms p' where adef: \<open>a = (n',ms,p')\<close> by blast
+    show "missing R'' ns < missing (R1 @ a # R) ns" 
+    proof cases
+      assume "remove ns ms = []"
+      then have "saturate' R1 (a # R) ns = saturate' (R1 @ [a]) R ns" using adef by simp
+      then have "missing R'' ns < missing (R1 @ [a] @ R) ns" using a1 a2 
+        by (metis append_assoc)
+      then show ?thesis by simp
+    next
+      assume a3:"\<not> remove ns ms = []"
+      then have \<open>\<exists> m' ms'. remove ns ms = m' # ms'\<close> 
+        by (meson list.exhaust)
+      then obtain m' ms' where nsms: "remove ns ms = m' # ms'" by blast
+      from this adef a2 have 2: \<open>
+        n = n' \<and> m = m' \<and> p = p' \<and> R' = R1 @ R \<and> R'' = R1 @ [(n',m' # ms,p')] @ R\<close>
+        by auto
+      have "missing [(n',m' # ms,p')] ns < missing [(n',ms,p')] ns"
+        by (simp add: miss2 nsms)
+      then show ?thesis 
+        by (simp add: "2" adef miss_plus)
+    qed
   qed
 qed
 
@@ -1479,78 +1640,7 @@ next
   then show ?case 
     using Cons.hyps msdef by auto
 qed
-
-
-lemma saturate_nom_members:\<open>
-  saturate' R2 R ns = Some (n,m,p,R',R'') \<Longrightarrow> member n (nominalsNSNP R) \<and> member m ns\<close> 
-proof (induct R arbitrary: R2 n m p R' R'')
-  case Nil
-  then show ?case by simp
-next
-  case (Cons r R)
-  obtain n' ns' p' where rdef:\<open>r = (n',ns',p')\<close> 
-    using prod_cases3 by blast 
-  consider "remove ns ns' = []" | \<open>\<exists> m ms. remove ns ns' = m # ms\<close> 
-    by (meson list.exhaust)
-  then show ?case 
-  proof cases
-    case 1
-    then have \<open>saturate' R2 (r # R) ns = saturate' (R2 @ [r]) R ns\<close> 
-      using rdef by simp
-    then have \<open>... = Some (n, m, p, R', R'')\<close> 
-      using Cons.prems by auto
-    then have 1:\<open>member n (nominalsNSNP R) \<and> member m ns\<close> 
-      using Cons.hyps by auto
-    then have \<open>member n (nominalsNSNP (r # R)) \<and> member m ns\<close> 
-    proof-
-      have \<open>\<exists> r'. nominalsNSNP (r # R) = nominalsNSNP R U r'\<close> 
-        by (metis nominalsNSNP.simps(2) prod_cases3)
-      then show ?thesis 
-        by (metis "1" union_member)
-    qed
-    then show ?thesis by simp
-  next
-    case 2
-    then obtain m ms where mdef:\<open>remove ns ns' = m # ms\<close>
-      by fast
-    then have \<open>saturate' R2 (r # R) ns = Some (n',m,p',R2 @ R,R2 @ [(n',m # ns',p')] @ R)\<close> 
-      using rdef by simp
-    moreover have \<open>member n' (nominalsNSNP (r # R))\<close> 
-    proof-
-      obtain u where \<open>nominalsNSNP (r # R) = nominalsNSNP R U add n' u\<close>
-        by (simp add: rdef)
-      then show ?thesis
-        by (metis ListSet.member.simps(2) add_def union_member)
-    qed
-    moreover have \<open>member m ns\<close> 
-      by (metis ListSet.member.simps(2) mdef member_sub_set sub_remove_set)
-    ultimately show ?thesis 
-      by (simp add: Cons.prems) 
-  qed
-qed
-
-(*Check if any of the pairs in a list contains two of the same element*)
-fun reflect where
-  \<open>reflect [] = False\<close> |
-  \<open>reflect ((n1,n2) # B) = (n1 = n2 \<or> reflect B)\<close>
-
-
-(*functions for termination*)
-primrec pos_count where 
-  \<open>pos_count (Pro a) = 0\<close> |
-  \<open>pos_count (Nom n) = 0\<close> |
-  \<open>pos_count (Neg p) = pos_count p\<close> |
-  \<open>pos_count (Con p1 p2) = pos_count p1 + pos_count p2\<close> |
-  \<open>pos_count (Sat n p) = pos_count p\<close> |
-  \<open>pos_count (Pos p) = Suc (pos_count p)\<close>
-
-fun pos_countNP where
-  \<open>pos_countNP [] = 0\<close> |                                          
-  \<open>pos_countNP ((_,p) # NP) = pos_count p + pos_countNP NP\<close>
-
-fun pos_countNSNP where
-  \<open>pos_countNSNP [] = 0\<close> |                                          
-  \<open>pos_countNSNP ((_,_,p) # NSNP) = pos_count p + pos_countNSNP NSNP\<close>
+(*\missing*)
 
 lemma pos_merge: \<open>pos_count (mergeP p n1 n2) = pos_count p\<close> 
   by (induct p) simp_all
@@ -1582,87 +1672,6 @@ next
   then show ?case
     using Cons.hyps adef by auto
 qed
-(*
-----------EXPLANATION OF PARAMETERS OF ATOMIZE---------
-All parameters are lists of tuples representing formulas of different types
-The first element identifies the nominal at which the formula holds
-
-LA/RA: LHS and RHS atomic non-nominal propositions. Sequent is valid if they share an element
-
-RN: RHS nominal propositions. Sequent is valid if we have @n n. There is no LN because we process 
-    them immediately
-
-LP/RP: LHS and RHS possibility relations between nominals. Sequent is valid if they share an element
-
-R: RHS possibility formulas with potentially complex subformulas. Formulas here can be discharged
-   multiple times with different witnessing nominals
-
-Q/P: LHS and RHS complex formulas.
-*)
-
-function atomize :: \<open>
-  (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow>
-  (nat \<times> (nat list) \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list 
-  \<Rightarrow> bool\<close> where
-  (*match RHS*)
-  \<open>atomize LA RA RN LP RP R Q ((n,Pro a) # P) = 
-    atomize LA ((n,a) # RA) RN LP RP R Q P\<close> |
-
-  \<open>atomize LA RA RN LP RP R Q ((n1,Nom n2) # P) = 
-    atomize LA RA ((n1,n2) # RN) LP RP R Q P\<close> |
-
-  \<open>atomize LA RA RN LP RP R Q ((n,Neg p) # P) = 
-    atomize LA RA RN LP RP R ((n,p) # Q) P\<close> |
-
-  \<open>atomize LA RA RN LP RP R Q ((n,Con p1 p2) # P) =
-    ((atomize LA RA RN LP RP R Q ((n,p1) # P)) \<and> (atomize LA RA RN LP RP R Q ((n,p2) # P)))\<close> |
-
-  \<open>atomize LA RA RN LP RP R Q ((n1,Sat n2 p) # P) = 
-    atomize LA RA RN LP RP R Q ((n2,p) # P)\<close> |
-(*We need to try to find a nominal witnessing Pos later. See last case*)
-  \<open>atomize LA RA RN LP RP R Q ((n,Pos p) # P) = 
-    atomize LA RA RN LP RP ((n,[],p) # R) Q P\<close>|
-
-  (*match LHS*)
-  \<open>atomize LA RA RN LP RP R ((n,Pro a) # Q) [] = 
-    atomize ((n,a) # LA) RA RN LP RP R Q []\<close> |
-(*we assume/assert that n1=n2. therefore, remove one of them*)
-  \<open>atomize LA RA RN LP RP R ((n1,Nom n2) # Q) [] = 
-    atomize (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) 
-      (mergeNN LP n1 n2) (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) []\<close> |
-
-  \<open>atomize LA RA RN LP RP R ((n,Neg p) # Q) [] = 
-    atomize LA RA RN LP RP R Q [(n,p)]\<close> |
-
-  \<open>atomize LA RA RN LP RP R ((n,Con p1 p2) # Q) []= 
-    atomize LA RA RN LP RP R ((n,p1) # (n,p2) # Q) []\<close> |
-
-  \<open>atomize LA RA RN LP RP R ((n1,Sat n2 p) # Q) [] = 
-    atomize LA RA RN LP RP R ((n2,p) # Q) []\<close> |
-
-  \<open>atomize LA RA RN LP RP R ((n,Pos p) # Q) [] = (
-    let nw = fresh (
-      nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
-      nominalsNN RP U nominalsNSNP R U nominalsNP ((n,Pos p) # Q)) 
-    in (atomize LA RA RN ((n,nw) # LP) RP R ((nw,p) # Q) []))\<close> |
-(*-------Try all relevant assignments of nominals to possibility on RHS-----------
-If no assignment can be made, check if current sequent is a tautology.
-Else we can process a statement @n\<diamond>P.
-  Find a nominal m to witness the statement
-  Check if the sequent with @n\<diamond>P removed fulfills both @n\<diamond>m and @mP
-Lastly, try another assignment. Remember that we already tried m.*)
-  \<open>atomize LA RA RN LP RP R [] [] = (
-      case 
-        saturate R (
-          nominalsNA LA U nominalsNA RA U nominalsNN RN U 
-          nominalsNN LP U nominalsNN RP U nominalsNSNP R)
-      of
-        None \<Rightarrow> (common LA RA \<or> common LP RP \<or> reflect RN)
-      | Some (n,m,p,R',R'') \<Rightarrow> 
-          (atomize LA RA RN LP ((n,m) # RP) R' [] [] \<and> atomize LA RA RN LP RP R' [] [(m,p)]) 
-          \<or> atomize LA RA RN LP RP R'' [] [])\<close> 
-  by pat_completeness simp_all
-(*size definition for proving termination of atomize*)
 
 primrec size_atom_form :: \<open>nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> 'a hybr_form \<Rightarrow> nat\<close> where
   \<open>size_atom_form ps r ns (Pro a) = Suc 0\<close> |
@@ -3606,6 +3615,9 @@ next
       n2_0 (pos_countNSNP R) R ns + missing R ns)\<close> 
     using n2 miss by (metis add_mono_thms_linordered_field(4))
 qed 
+end
+
+hide_fact pos_count_con
 
 (*tautology definition*)
 definition prover where 
