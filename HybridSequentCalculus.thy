@@ -1,10 +1,6 @@
 theory HybridSequentCalculus imports Main ListSet
 begin
 
-datatype 'a option
-  = None
-  | Some 'a
-
 datatype 'a hybr_form 
   =  Pro 'a (\<open>PRO _\<close> [999] 999)
   | Nom nat (\<open>NOM _\<close> [998] 998)
@@ -693,11 +689,11 @@ next
     moreover have \<open>
       set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
         add n2 (mergeNS ns n1 n2 U mergeNS (nominalsForm p) n1 n2))\<close> 
-      by (metis equal_add merge_union set_equal_commutative set_equal_union)
+      by (metis equal_add merge_union set_equal_commutative union_with_equal)
     moreover have \<open>
       set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
         add n2 (mergeNS ns n1 n2 U nominalsForm (mergeP p n1 n2)))\<close> 
-      by (meson equal_add merge_nomP set_equal_union)
+      by (meson equal_add merge_nomP union_with_equal)
     ultimately show ?thesis 
       using "2" a adef by force
   next
@@ -709,11 +705,11 @@ next
     moreover have \<open>
       set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
         add n (mergeNS ns n1 n2 U mergeNS (nominalsForm p) n1 n2))\<close> 
-      by (metis equal_add merge_union set_equal_commutative set_equal_union)
+      by (metis equal_add merge_union set_equal_commutative union_with_equal)
     moreover have \<open>
       set_equal ... (nominalsNSNP (mergeNSNP nsnp n1 n2) U 
         add n (mergeNS ns n1 n2 U nominalsForm (mergeP p n1 n2)))\<close> 
-      by (meson equal_add merge_nomP set_equal_union)
+      by (meson equal_add merge_nomP union_with_equal)
     ultimately show ?thesis 
       using "2" a adef by force
   qed
@@ -737,72 +733,72 @@ proof-
       nominalsNN (mergeNN RN n1 n2) U nominalsNN (mergeNN LP n1 n2) U 
       nominalsNN (mergeNN RP n1 n2) U nominalsNSNP (mergeNSNP R n1 n2) U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (metis merge_nomNP set_equal_commutative set_equal_union)
+    by (metis merge_nomNP set_equal_commutative union_with_equal)
   moreover have "
     set_equal ... (
       nominalsNA (mergeNA LA n1 n2) U nominalsNA (mergeNA RA n1 n2) U 
       nominalsNN (mergeNN RN n1 n2) U nominalsNN (mergeNN LP n1 n2) U 
       nominalsNN (mergeNN RP n1 n2) U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (metis merge_nomNSNP set_equal_commutative set_equal_union set_equal_union2)
+    by (metis merge_nomNSNP set_equal_commutative union_with_equal union_with_equal2)
   moreover have "
     set_equal ... (
       nominalsNA (mergeNA LA n1 n2) U nominalsNA (mergeNA RA n1 n2) U 
       nominalsNN (mergeNN RN n1 n2) U nominalsNN (mergeNN LP n1 n2) U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)"
-    by (meson merge_nomNN set_equal_commutative set_equal_union set_equal_union2)
+    by (meson merge_nomNN set_equal_commutative union_with_equal union_with_equal2)
   moreover have "
     set_equal ... (
       nominalsNA (mergeNA LA n1 n2) U nominalsNA (mergeNA RA n1 n2) U 
       nominalsNN (mergeNN RN n1 n2) U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (meson merge_nomNN set_equal_commutative set_equal_union set_equal_union2)
+    by (meson merge_nomNN set_equal_commutative union_with_equal union_with_equal2)
   moreover have "
     set_equal ... (
       nominalsNA (mergeNA LA n1 n2) U nominalsNA (mergeNA RA n1 n2) U
       mergeNS (nominalsNN RN) n1 n2 U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (meson merge_nomNN set_equal_commutative set_equal_union set_equal_union2)
+    by (meson merge_nomNN set_equal_commutative union_with_equal union_with_equal2)
   moreover have "
     set_equal ... (
       nominalsNA (mergeNA LA n1 n2) U mergeNS (nominalsNA RA) n1 n2 U
       mergeNS (nominalsNN RN) n1 n2 U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (meson merge_nomNA set_equal_commutative set_equal_union set_equal_union2)
+    by (meson merge_nomNA set_equal_commutative union_with_equal union_with_equal2)
   moreover have "
     set_equal ... (
       mergeNS (nominalsNA LA) n1 n2 U mergeNS (nominalsNA RA) n1 n2 U 
       mergeNS (nominalsNN RN) n1 n2 U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R) n1 n2 U 
       mergeNS (nominalsNP Q) n1 n2)" 
-    by (meson merge_nomNA set_equal_commutative set_equal_union set_equal_union2)
+    by (meson merge_nomNA set_equal_commutative union_with_equal union_with_equal2)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA) n1 n2 U mergeNS (nominalsNA RA) n1 n2 U 
       mergeNS (nominalsNN RN) n1 n2 U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP) n1 n2 U mergeNS (nominalsNSNP R U nominalsNP Q) n1 n2)\<close> 
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA) n1 n2 U mergeNS (nominalsNA RA) n1 n2 U 
       mergeNS (nominalsNN RN) n1 n2 U mergeNS (nominalsNN LP) n1 n2 U 
       mergeNS (nominalsNN RP U nominalsNSNP R U nominalsNP Q) n1 n2)\<close>
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA) n1 n2 U mergeNS (nominalsNA RA) n1 n2 U 
       mergeNS (nominalsNN RN) n1 n2 U 
       mergeNS (nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q) n1 n2)\<close>
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA) n1 n2 U mergeNS (nominalsNA RA) n1 n2 U 
       mergeNS (nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U 
       nominalsNP Q) n1 n2)\<close>
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA) n1 n2 U 
       mergeNS (nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U 
       nominalsNP Q) n1 n2)\<close>
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   moreover have \<open>set_equal ... (mergeNS (nominalsNA LA U nominalsNA RA U nominalsNN RN U 
       nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q) n1 n2)\<close>
-    by (meson merge_union set_equal_union)
+    by (meson merge_union union_with_equal)
   ultimately show ?thesis 
     by simp
 qed
@@ -810,6 +806,38 @@ qed
 lemma merge_lengthNSNP: \<open>length nsnp = length (mergeNSNP nsnp n1 n2)\<close> 
   by (induct nsnp) auto
 
+lemma nominals_con: \<open>
+  R = R1 @ R2 \<Longrightarrow> set_equal (nominalsNSNP R) (nominalsNSNP R1 U nominalsNSNP R2)\<close> 
+proof (induct R1 arbitrary: R)
+  case Nil
+  then show ?case 
+    by (metis nominalsNSNP.simps(1) self_append_conv2 set_equal_commutative unionaddnt)
+next
+  case (Cons a R1)
+  obtain n ns p where adef:\<open>a = (n,ns,p)\<close>
+    using prod_cases3 by blast
+  obtain R' where Rdef:\<open>R' = R1 @ R2\<close> 
+    by simp
+  have \<open>set_equal (nominalsNSNP R) (add n (ns U nominalsForm p) U nominalsNSNP R')\<close> 
+    by (metis Cons.prems Rdef adef append_Cons nominalsNSNP.simps(2) union_commutative)
+  moreover have \<open>set_equal (nominalsNSNP R') (nominalsNSNP R1 U nominalsNSNP R2)\<close> 
+    using Cons.hyps Rdef by auto
+  ultimately have 1:\<open>
+    set_equal (nominalsNSNP R) (add n (ns U nominalsForm p) U (nominalsNSNP R1 U nominalsNSNP R2))\<close> 
+    by (meson set_equal_associative union_with_equal)
+  have \<open>set_equal (nominalsNSNP (a # R1)) (nominalsNSNP R1 U add n (ns U nominalsForm p))\<close>
+    using adef by simp
+  moreover have \<open>set_equal ... (add n (ns U nominalsForm p) U nominalsNSNP R1)\<close> 
+    by (meson union_commutative)
+  ultimately have \<open>set_equal (nominalsNSNP (a # R1) U nominalsNSNP R2) 
+    ((add n (ns U nominalsForm p) U nominalsNSNP R1) U nominalsNSNP R2)\<close> 
+    by (meson set_equal_associative union_with_equal2)
+  moreover have \<open>set_equal ...
+    (add n (ns U nominalsForm p) U (nominalsNSNP R1 U nominalsNSNP R2))\<close> 
+    by (meson set_equal_associative set_equal_commutative union_associative union_with_equal)
+  ultimately show ?case 
+    using "1" by auto
+qed
 (*
 functions for finding possibility formulas that has not been tried with one of the existing
 nominals yet
@@ -1191,6 +1219,81 @@ next
   qed
 qed
 
+lemma saturate_split: \<open>
+  saturate' R3 R ns = Some (n,m,p,R',R'') \<Longrightarrow> 
+    (\<exists> R1 R2 ms. R' = R1 @ R2 \<and> R3 @ R = R1 @ [(n,ms,p)] @ R2)\<close> 
+proof (induct R arbitrary: n m p R' R'' R3)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons r R)
+  obtain n' ns' p' where rdef: \<open>r = (n',ns',p')\<close> 
+    by (meson prod_cases3)
+  consider \<open>remove ns ns' = []\<close> | \<open>\<exists> m ms. remove ns ns' = m # ms\<close> 
+    by (meson list.exhaust)
+  then show ?case 
+  proof cases
+    case 1
+    then have \<open>saturate' R3 (r # R) ns = saturate' (R3 @ [r]) R ns\<close> 
+      using rdef by simp
+    then show ?thesis 
+      by (smt (verit, ccfv_threshold) Cons.hyps Cons.prems append_Cons append_eq_append_conv2 
+          append_self_conv)
+  next
+    case 2
+    then obtain m u where \<open>remove ns ns' = m # u\<close> 
+      by fast
+    then have \<open>saturate' R3 (r # R) ns = Some (n',m,p',R3 @ R,R3 @ [(n',m # ns',p')] @ R)\<close> 
+      using rdef by simp
+    then have 1:\<open>Some (n, m, p, R', R'') = Some (n',m,p',R3 @ R,R3 @ [(n',m # ns',p')] @ R)\<close> 
+      by (simp add: Cons.prems)
+    then have \<open>R' = R3 @ R\<close> 
+      by simp
+    moreover have \<open>R3 @ (r # R) = R3 @ ((n,ns',p) # R)\<close> 
+      using "1" rdef by blast
+    ultimately show ?thesis 
+      by auto
+  qed
+qed 
+
+lemma saturate_split2: \<open>
+  saturate' R3 R ns = Some (n,m,p,R',R'') \<Longrightarrow> 
+    (\<exists> R1 R2 ms ms'. R'' = R1 @ [(n,m # ms,p)] @ R2 \<and> R3 @ R = R1 @ [(n,ms,p)] @ R2 \<and> 
+      remove ns ms = m # ms')\<close> 
+proof (induct R arbitrary: R3)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons r R)
+  obtain n' ns' p' where rdef: \<open>r = (n',ns',p')\<close> 
+    by (meson prod_cases3)
+  consider \<open>remove ns ns' = []\<close> | \<open>\<exists> m ms. remove ns ns' = m # ms\<close> 
+    by (meson list.exhaust)
+  then show ?case 
+  proof cases
+    case 1
+    then have \<open>saturate' R3 (r # R) ns = saturate' (R3 @ [r]) R ns\<close> 
+      using rdef by simp
+    then show ?thesis 
+      by (smt (verit, ccfv_threshold) Cons.hyps Cons.prems append_Cons append_eq_append_conv2 
+          append_self_conv)
+  next
+    case 2
+    then obtain m u where mu_def:\<open>remove ns ns' = m # u\<close> 
+      by fast
+    then have 2:\<open>saturate' R3 (r # R) ns = Some (n',m,p',R3 @ R,R3 @ [(n',m # ns',p')] @ R)\<close> 
+      using rdef by simp
+    then have 1:\<open>Some (n, m, p, R', R'') = Some (n',m,p',R3 @ R,R3 @ [(n',m # ns',p')] @ R)\<close> 
+      by (simp add: Cons.prems)
+    then have \<open>R'' = R3 @ [(n',m # ns',p')] @ R\<close> 
+      by simp
+    moreover have \<open>R3 @ (r # R) = R3 @ ((n,ns',p) # R)\<close> 
+      using "1" rdef by blast
+    ultimately show ?thesis 
+      using Cons.prems 2 mu_def by auto
+  qed
+qed
+
 lemma remove_add_missing: "
   is_set A \<Longrightarrow> member a A \<Longrightarrow> missing' X A = missing' X (a # (remove A [a]))"
   apply (induct A)
@@ -1378,6 +1481,54 @@ next
 qed
 
 
+lemma saturate_nom_members:\<open>
+  saturate' R2 R ns = Some (n,m,p,R',R'') \<Longrightarrow> member n (nominalsNSNP R) \<and> member m ns\<close> 
+proof (induct R arbitrary: R2 n m p R' R'')
+  case Nil
+  then show ?case by simp
+next
+  case (Cons r R)
+  obtain n' ns' p' where rdef:\<open>r = (n',ns',p')\<close> 
+    using prod_cases3 by blast 
+  consider "remove ns ns' = []" | \<open>\<exists> m ms. remove ns ns' = m # ms\<close> 
+    by (meson list.exhaust)
+  then show ?case 
+  proof cases
+    case 1
+    then have \<open>saturate' R2 (r # R) ns = saturate' (R2 @ [r]) R ns\<close> 
+      using rdef by simp
+    then have \<open>... = Some (n, m, p, R', R'')\<close> 
+      using Cons.prems by auto
+    then have 1:\<open>member n (nominalsNSNP R) \<and> member m ns\<close> 
+      using Cons.hyps by auto
+    then have \<open>member n (nominalsNSNP (r # R)) \<and> member m ns\<close> 
+    proof-
+      have \<open>\<exists> r'. nominalsNSNP (r # R) = nominalsNSNP R U r'\<close> 
+        by (metis nominalsNSNP.simps(2) prod_cases3)
+      then show ?thesis 
+        by (metis "1" union_member)
+    qed
+    then show ?thesis by simp
+  next
+    case 2
+    then obtain m ms where mdef:\<open>remove ns ns' = m # ms\<close>
+      by fast
+    then have \<open>saturate' R2 (r # R) ns = Some (n',m,p',R2 @ R,R2 @ [(n',m # ns',p')] @ R)\<close> 
+      using rdef by simp
+    moreover have \<open>member n' (nominalsNSNP (r # R))\<close> 
+    proof-
+      obtain u where \<open>nominalsNSNP (r # R) = nominalsNSNP R U add n' u\<close>
+        by (simp add: rdef)
+      then show ?thesis
+        by (metis ListSet.member.simps(2) add_def union_member)
+    qed
+    moreover have \<open>member m ns\<close> 
+      by (metis ListSet.member.simps(2) mdef member_sub_set sub_remove_set)
+    ultimately show ?thesis 
+      by (simp add: Cons.prems) 
+  qed
+qed
+
 (*Check if any of the pairs in a list contains two of the same element*)
 fun reflect where
   \<open>reflect [] = False\<close> |
@@ -1554,12 +1705,19 @@ abbreviation n2_0 where
 lemma n1_0_ps_less: \<open>length ns \<le> length ns' \<Longrightarrow> ps \<le> ps' \<Longrightarrow> n1_0 Q ps R ns \<le> n1_0 Q ps' R ns'\<close>
   by (simp add: lesser_sum size_atom_form_size_ns)
 
+lemma n2_0_ps_less: \<open>length ns \<le> length ns' \<Longrightarrow> ps \<le> ps' \<Longrightarrow> n2_0 ps R ns \<le> n2_0 ps' R ns'\<close>
+  by (simp add: lesser_sum size_atom_form_size_ns)
+
 lemma size_atom_suc_dec: \<open>
   ns + ps + R = ns' + ps' + R' \<Longrightarrow> size_atom_form ps R ns p = size_atom_form ps' R' ns' p\<close> 
   by (induct p) simp_all
 
-lemma n1_0_suc_dec: \<open>ps + ns + r = ps' + ns' + r' \<Longrightarrow>
-  (\<Sum>(_,p) \<leftarrow> Q. size_atom_form ps  r  ns  p) =
+lemma size_atom_suc_dec2: \<open>
+  ns + ps + R \<le> ns' + ps' + R' \<Longrightarrow> size_atom_form ps R ns p \<le> size_atom_form ps' R' ns' p\<close> 
+  by (induct p) simp_all
+
+lemma n1_0_suc_dec: \<open>ps + ns + r \<le> ps' + ns' + r' \<Longrightarrow>
+  (\<Sum>(_,p) \<leftarrow> Q. size_atom_form ps  r  ns  p) \<le>
   (\<Sum>(_,p) \<leftarrow> Q. size_atom_form ps' r' ns' p)\<close>
 proof (induct Q)
   case Nil
@@ -1567,34 +1725,53 @@ proof (induct Q)
 next
   case (Cons a Q)
   let ?sm = \<open>\<lambda> Q ps r ns. (\<Sum>(_,p) \<leftarrow> Q. size_atom_form ps r ns p)\<close>
-  obtain u p where "a = (u,p)" 
+  obtain u p where adef:"a = (u,p)" 
     using prod.exhaust_sel by blast
-  then have "?sm [a] ps r ns = ?sm [a] ps' r' ns'" 
-    by (metis (full_types) Cons.prems add.assoc add.left_commute size_atom_suc_dec)
-  moreover have \<open>?sm Q ps r ns = ?sm Q ps' r' ns'\<close> 
+  then have "size_atom_form ps  r  ns p \<le> size_atom_form ps' r' ns' p" 
+    by (metis Cons.prems add.commute size_atom_suc_dec2)
+  moreover have \<open>?sm Q ps r ns \<le> ?sm Q ps' r' ns'\<close> 
     by (simp add: Cons.hyps Cons.prems)
-  ultimately show ?case 
-    by simp
+  ultimately show ?case
+    by (smt (z3) adef case_prod_conv lesser_add list.simps(9) sum_list.Cons)
 qed
 
-lemma n2_0_suc_dec: \<open>ps + ns + r = ps' + ns' + r' \<Longrightarrow>
-  (\<Sum>(_,_,p) \<leftarrow> Q. size_atom_form ps  r  ns  p) =
-  (\<Sum>(_,_,p) \<leftarrow> Q. size_atom_form ps' r' ns' p)\<close>
-proof (induct Q)
+lemma n1_0_suc_dec2: \<open>ps + length ns + length R \<le> ps' + length ns' + length R' \<Longrightarrow>
+  n1_0 Q ps R ns \<le>
+  n1_0 Q ps' R' ns'\<close> 
+  using n1_0_suc_dec by blast
+
+lemma n2_0_suc_dec: \<open>ps + ns + r \<le> ps' + ns' + r' \<Longrightarrow>
+  (\<Sum>(u, uu, p)\<leftarrow>R. Suc (size_atom_form ps r ns p)) \<le>
+  (\<Sum>(u, uu, p)\<leftarrow>R. Suc (size_atom_form ps' r' ns' p))\<close>
+proof (induct R)
   case Nil
   then show ?case by simp
 next
-  case (Cons a Q)
-  let ?sm = \<open>\<lambda> Q ps r ns. (\<Sum>(_,_,p) \<leftarrow> Q. size_atom_form ps r ns p)\<close>
-  obtain u u' p where "a = (u,u',p)" 
+  case (Cons a R)
+  let ?sm = \<open>\<lambda> Q ps r ns. (\<Sum>(_, _, p)\<leftarrow>R. Suc (size_atom_form ps r ns p))\<close>
+  obtain u u' p where adef:"a = (u,u',p)" 
     using prod_cases3 by blast
-  then have "?sm [a] ps r ns = ?sm [a] ps' r' ns'"  
-    by (metis (no_types, lifting) Cons.prems add.assoc add.left_commute case_prod_conv 
-        list.simps(8) list.simps(9) size_atom_suc_dec)
-  moreover have \<open>?sm Q ps r ns = ?sm Q ps' r' ns'\<close>
+  then have "Suc (size_atom_form ps  r  ns p) \<le> Suc (size_atom_form ps' r' ns' p)" 
+    by (metis Cons.prems Suc_le_mono add.commute size_atom_suc_dec2)
+  moreover have \<open>?sm R ps r ns \<le> ?sm R ps' r' ns'\<close>
     by (simp add: Cons.hyps Cons.prems)
   ultimately show ?case 
-    by simp
+    by (smt (z3) adef case_prod_conv lesser_add list.simps(9) sum_list.Cons)
+qed
+
+lemma n2_0_suc_dec2: \<open>ps + length ns \<le> ps' + length ns' \<Longrightarrow>
+  n2_0 ps R ns \<le>
+  n2_0 ps' R ns'\<close> 
+proof-
+  assume \<open>ps + length ns \<le> ps' + length ns'\<close>
+  then have 1:\<open>ps + (length R) + (length ns) \<le> ps' + (length R) + (length ns')\<close> by simp
+  show ?thesis 
+    proof -
+    have "length ns + (ps + length R) \<le> ps' + length R + length ns'"
+      by (metis "1" add.commute)
+    then show ?thesis
+      by (simp add: n2_0_suc_dec)
+  qed
 qed
 
 lemma sum_suc: "(\<Sum>(u, u', p)\<leftarrow>R. Suc (f p)) = (\<Sum>(u, u', p)\<leftarrow>R. f p) + length R" 
@@ -1607,6 +1784,29 @@ lemma merge_size_atom:\<open>ns \<le> ns' \<Longrightarrow> R \<le> R' \<Longrig
   size_atom_form ps R ns (mergeP p n1 n2) \<le> 
   size_atom_form ps' R' ns' p\<close> 
   by (induct p) simp_all
+
+lemma missing_add_length: \<open>missing R (add n ns) \<le> missing R ns + length R\<close> 
+proof (induct R)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a R)
+  obtain u1 u2 ms where adef: \<open>a = (u1,ms,u2)\<close>
+    using prod_cases3 by blast
+  show ?case 
+  proof cases
+    assume "member n ns"
+    then show ?thesis 
+      by (simp add: add_def)
+  next
+    assume a:\<open>\<not>member n ns\<close>
+    have \<open>missing' ms (n # ns) \<le> missing' ms ns + 1\<close>
+      by force
+    then show ?thesis 
+      by (smt (z3) Cons.hyps a add.assoc add.commute add_def adef dual_order.antisym le_add2 
+          length_Cons lesser_add list.inject missing.simps(2) order_refl plus_1_eq_Suc)
+  qed
+qed
 
 lemma merge_n1_0: \<open>length ns \<le> length ns' \<Longrightarrow> length R \<le> length R' \<Longrightarrow> ps \<le> ps' \<Longrightarrow>
   n1_0 (mergeNP Q n1 n2) ps R ns \<le> n1_0 Q ps' R' ns'\<close> 
@@ -1696,6 +1896,35 @@ proof-
   ultimately show ?C 
     by simp
 qed
+
+lemma n2_0_lesser:\<open>(ps \<le> ps' \<Longrightarrow> Rl \<le> Rl' \<Longrightarrow> ns \<le> ns' \<Longrightarrow> 
+  (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps Rl ns p)) \<le> 
+  (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps' Rl' ns' p)))\<close>
+proof (induct R)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons r R)
+  obtain u u' p where rdef:\<open>r = (u,u',p)\<close> 
+    using prod_cases3 by blast
+  have \<open>
+    (\<Sum>(u, u', p)\<leftarrow>r # R. Suc (size_atom_form ps Rl ns p)) = 
+    Suc (size_atom_form ps Rl ns p) + (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps Rl ns p))\<close>
+    using rdef by simp
+  moreover have \<open>
+    (\<Sum>(u, u', p)\<leftarrow>r # R. Suc (size_atom_form ps' Rl' ns' p)) = 
+    Suc (size_atom_form ps' Rl' ns' p) + (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps' Rl' ns' p))\<close>
+    using rdef by simp
+  moreover have \<open>Suc (size_atom_form ps Rl ns p) \<le> Suc (size_atom_form ps' Rl' ns' p)\<close>
+    by (simp add: Cons.prems(1) Cons.prems(2) Cons.prems(3) add_le_mono size_atom_suc_dec2)
+  ultimately show ?case 
+    using Cons.hyps Cons.prems(1) Cons.prems(2) Cons.prems(3) by linarith
+qed
+
+lemma pos_count_con: \<open>pos_countNSNP (A @ B) = pos_countNSNP A + pos_countNSNP B\<close> 
+  apply (induct A) 
+   apply simp
+  using add.left_commute by auto
 
 termination
   apply (relation \<open>measure (
@@ -1796,13 +2025,13 @@ next
     proof -
       have "set_equal (add n1 ([n2] U nominalsNP P)) (add n1 (add n2 (nominalsNP P)))" 
         by (metis member.simps(1) add_def set_equal_iff union.simps(1) 
-            union_associativity unionadd1 unionadd2 unionaddnt)
+            union_associative unionadd1 unionadd2 unionaddnt)
       then have "
         set_equal 
           (?ms LA RA RN LP RP R Q n1 n2 P)  
           (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
             nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n1 (add n2 (nominalsNP P)))" 
-        using set_equal_union by metis
+        using union_with_equal by metis
       moreover have "
         set (...) =
         set (add n1 (add n2 (ns_0 LA RA RN LP RP R Q P)))"
@@ -2250,7 +2479,7 @@ next
         by (smt (z3) Un_insert_left add_simp sup_assoc sup_left_commute union_simp)
       moreover have \<open>set_equal ...
         (add n (nominalsForm p U (ns_0 LA RA RN LP RP R Q P)))\<close> 
-        by (meson equal_add set_equal_union2 unionaddnt) 
+        by (meson equal_add union_with_equal2 unionaddnt) 
       moreover have \<open>set_equal (?ms LA RA RN LP RP R Q n p P) 
             (add n (nominalsForm p U (ns_0 LA RA RN LP RP R Q P)))\<close>
         apply simp
@@ -2275,7 +2504,7 @@ next
     proof-
       have "
         (\<Sum>(u, y)\<leftarrow>Q. size_atom_form (?psn R Q P p) (Suc (length R)) 
-          (length (?ns LA RA RN LP RP R Q n p P)) y) =
+          (length (?ns LA RA RN LP RP R Q n p P)) y) \<le>
         (\<Sum>(u, y)\<leftarrow>Q. size_atom_form (Suc (?psm R Q P p)) (length R) 
           (length (?ms LA RA RN LP RP R Q n p P)) y)" 
         by (simp add: 3 4 n1_0_suc_dec)
@@ -2288,7 +2517,7 @@ next
     proof-
       have "
         (\<Sum>(u, y)\<leftarrow>P. size_atom_form (?psn R Q P p) (Suc (length R)) 
-          (length (?ns LA RA RN LP RP R Q n p P)) y) =
+          (length (?ns LA RA RN LP RP R Q n p P)) y) \<le>
         (\<Sum>(u, y)\<leftarrow>P. size_atom_form (Suc (?psm R Q P p)) (length R) 
           (length (?ms LA RA RN LP RP R Q n p P)) y)" 
         by (simp add: 3 4 n1_0_suc_dec)
@@ -2300,11 +2529,29 @@ next
       n2_0 (Suc (?psm R Q P p)) R (?ms LA RA RN LP RP R Q n p P) + length R" 
     proof-
       have \<open>
-        (\<Sum>(u, u', p')\<leftarrow>R. size_atom_form (?psn R Q P p) (Suc (length R)) 
-          (length (?ns LA RA RN LP RP R Q n p P)) p') = 
-        (\<Sum>(u, u', p')\<leftarrow>R. size_atom_form (Suc (?psm R Q P p)) (length R) 
-          (length (?ms LA RA RN LP RP R Q n p P)) p')\<close>  
-        by (simp add: 3 n2_0_suc_dec)
+        (?psn R Q P p) + (Suc (length R)) + (length (?ns LA RA RN LP RP R Q n p P)) \<le>
+        (Suc (?psm R Q P p)) + (length R) + (length (?ms LA RA RN LP RP R Q n p P))\<close>
+        using "4" by auto
+      then have \<open>
+        (\<Sum>(u, uu, p')\<leftarrow>R. Suc (size_atom_form (?psn R Q P p) (Suc (length R)) 
+          (length (?ns LA RA RN LP RP R Q n p P)) p')) \<le> 
+        (\<Sum>(u, uu, p')\<leftarrow>R. Suc (size_atom_form (Suc (?psm R Q P p)) (length R) 
+          (length (?ms LA RA RN LP RP R Q n p P)) p'))\<close>  
+        using n2_0_suc_dec
+      proof -(*generated proof*)
+        have "\<And>n na nb nc nd ne ps. \<not> n + (na + nb) \<le> nc + (nd + ne) \<or> 
+          (\<Sum>(nc, ns, h)\<leftarrow>(ps::(nat \<times> nat list \<times> 'a hybr_form) list). 
+            Suc (size_atom_form n nb na h)) \<le> (\<Sum>(n, ns, h)\<leftarrow>ps. Suc (size_atom_form nc ne nd h))"
+          by (simp add: n2_0_suc_dec)
+        then have "
+          (\<Sum>(na, ns, h)\<leftarrow>R. Suc (size_atom_form (?psn R Q P p) (Suc (length R)) 
+            (length (?ms LA RA RN LP RP R Q n p P)) h)) \<le> 
+          n2_0 (Suc (?psm R Q P p)) R 
+            (?ms LA RA RN LP RP R Q n p P)"
+          by force
+        then show ?thesis
+          by (metis "3") 
+      qed
       then show ?thesis 
         by (simp add: sum_suc)
     qed
@@ -2463,8 +2710,902 @@ next
       by (metis 1 4 add_le_mono le_imp_less_Suc)
   qed
 next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix Q :: \<open>(nat \<times>'a hybr_form) list\<close>
+  fix n :: nat
+  fix p :: "'a hybr_form"
+  let ?ns = "\<lambda> LA RA RN LP RP R Q n p.
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+    nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)"
+  let ?ms = "\<lambda> LA RA RN LP RP R Q n p.
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+    nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)"
+  let ?psn = "\<lambda> R Q p. pos_countNSNP R + pos_countNP Q + pos_count p"
+  let ?psm = "\<lambda> R Q p. pos_countNSNP R + (pos_count p + pos_countNP Q)"
+  let ?show_this = "\<lambda> LA RA RN LP RP R Q n p.
+    (let ns = ?ns LA RA RN LP RP R Q n p in 
+    let ps = ?psn R Q p in
+      n1_0 Q ps R ns + size_atom_form ps (length R) (length ns) p + n2_0 ps R ns + missing R ns) < (
+    let ns = ?ms LA RA RN LP RP R Q n p in
+    let ps = ?psm R Q p in Suc (
+      size_atom_form ps (length R) (length ns) p + n1_0 Q ps R ns + n2_0 ps R ns + missing R ns))"
+  show "?show_this LA RA RN LP RP R Q n p"
+  proof-
+    have isset: "
+      is_set (?ns LA RA RN LP RP R Q n p) \<and> is_set (?ms LA RA RN LP RP R Q n p)"
+      using NA_is_set union_is_set by auto
+
+    have setequal: "set_equal (?ns LA RA RN LP RP R Q n p) (?ms LA RA RN LP RP R Q n p)"
+    proof -
+      have "set_equal (?ns LA RA RN LP RP R Q n p) (
+        nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U nominalsNSNP R U add n (nominalsNP Q U nominalsForm p))"
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U add n (nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        add n (nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        nominalsNA LA U nominalsNA RA U nominalsNN RN U add n (nominalsNN LP U 
+        nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        nominalsNA LA U nominalsNA RA U add n (nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        nominalsNA LA U add n (nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative union_with_equal unionadd2)
+      moreover have \<open>set_equal ... (
+        add n (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p))\<close>
+        by (metis set_equal_commutative unionadd2)
+      moreover have "set_equal ... (add n (nominalsForm p U ns_1 LA RA RN LP RP R Q))" 
+      proof-
+        have \<open>
+          set_equal (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+              nominalsNN RP U nominalsNSNP R U nominalsNP Q U nominalsForm p)
+            (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsForm p U nominalsNN LP U 
+              nominalsNN RP U nominalsNSNP R U nominalsNP Q)\<close> 
+          by (meson set_equal_associative union_associative union_commutative union_with_equal)
+        moreover have \<open>
+          set_equal ...
+            (nominalsForm p U nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+              nominalsNN RP U nominalsNSNP R U nominalsNP Q)\<close> 
+          by (meson set_equal_associative union_associative union_commutative union_with_equal)
+        ultimately show ?thesis 
+          by (meson equal_add set_equal_associative)
+      qed
+      moreover have "set_equal 
+        (?ms LA RA RN LP RP R Q n p)
+        (add n (nominalsForm p U ns_1 LA RA RN LP RP R Q))"
+        apply simp
+        by (smt (z3) Un_insert_left add_simp sup_assoc sup_left_commute union_simp)
+      ultimately show ?thesis
+        by blast
+    qed
+    then have 1:"
+      missing R (?ns LA RA RN LP RP R Q n p) = missing R (?ms LA RA RN LP RP R Q n p)" 
+      using isset missing_set_equal2
+      by blast
+    have 2:"
+      length (?ns LA RA RN LP RP R Q n p) = length (?ms LA RA RN LP RP R Q n p)" 
+      using isset set_size_equal setequal 
+      by meson
+    have 3:"?psn R Q p = ?psm R Q p"
+      by simp
+    have \<open>
+      n1_0 Q (?psn R Q p) R (?ns LA RA RN LP RP R Q n p) \<le> 
+      n1_0 Q (?psm R Q p) R (?ms LA RA RN LP RP R Q n p)\<close> 
+      by (metis (mono_tags) "2" add.commute dual_order.eq_iff group_cancel.add2)
+    moreover have \<open>
+      n2_0 (?psn R Q p) R (?ns LA RA RN LP RP R Q n p) \<le>   
+      n2_0 (?psm R Q p) R (?ms LA RA RN LP RP R Q n p)\<close> 
+      by (simp add: "2" add.commute add.left_commute)
+    moreover have \<open>
+      size_atom_form (?psn R Q p) (length R) (length (?ns LA RA RN LP RP R Q n p)) p \<le> 
+        size_atom_form (?psm R Q p) (length R) (length (?ms LA RA RN LP RP R Q n p)) p\<close> 
+      by (simp add: 2 3)
+    show "?show_this LA RA RN LP RP R Q n p" 
+    proof - (*Generated proof - sorry...*)
+      have f1: "((\<lambda>na. size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p))))::nat \<Rightarrow> 'a hybr_form \<Rightarrow> nat) = (\<lambda>na. size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))))"
+        by (simp add: "2" add.commute add.left_commute)
+      have f2: "((\<lambda>na. size_atom_form (pos_countNSNP R + (pos_count p + pos_countNP Q)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))))::nat \<Rightarrow> 'a hybr_form \<Rightarrow> nat) = (\<lambda>na. size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))))"
+        by (metis (no_types) add.commute group_cancel.add2)
+      have f3: "((\<lambda>ns h. Suc (size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p))) h))::nat list \<Rightarrow> 'a hybr_form \<Rightarrow> nat) = (\<lambda>ns h. Suc (size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) h))"
+        by (metis f1)
+      have f4: "((\<lambda>ns h. Suc (size_atom_form (pos_countNSNP R + (pos_count p + pos_countNP Q)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) h))::nat list \<Rightarrow> 'a hybr_form \<Rightarrow> nat) = (\<lambda>ns h. Suc (size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) h))"
+        by (metis (no_types) add.commute group_cancel.add2)
+      have "n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) p)) < Suc (n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) p)))"
+        by (smt (z3) \<open>missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) = missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))\<close> add.commute add_diff_inverse_nat group_cancel.add2 less_add_Suc1 less_irrefl_nat)
+      then have "n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p))) p)) < Suc (n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) p)))"
+        by (metis (lifting) "2")
+      then have "n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p))) p + n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) < Suc (n1_0 Q (pos_countNSNP R + (pos_count p + pos_countNP Q)) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + (n2_0 (pos_countNSNP R + (pos_count p + pos_countNP Q)) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + size_atom_form (pos_countNP Q + (pos_countNSNP R + pos_count p)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) p)))"
+        using f4 f3 f2 f1 by presburger
+      then have "n1_0 Q (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + size_atom_form (pos_countNSNP R + pos_countNP Q + pos_count p) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p))) p + n2_0 (pos_countNSNP R + pos_countNP Q + pos_count p) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) + missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U nominalsNP Q U add n (nominalsForm p)) < Suc (n2_0 (pos_countNSNP R + (pos_count p + pos_countNP Q)) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + (n1_0 Q (pos_countNSNP R + (pos_count p + pos_countNP Q)) R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + (missing R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)) + size_atom_form (pos_countNSNP R + (pos_count p + pos_countNP Q)) (length R) (length (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))) p)))"
+        by (smt (z3) add.commute group_cancel.add2)
+      then show ?thesis
+        by (smt (z3) add.commute group_cancel.add2)
+    qed
+  qed
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix Q :: \<open>(nat \<times>'a hybr_form) list\<close>
+  fix n :: nat
+  fix p1 p2 :: "'a hybr_form"
+  let ?ns = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+    nominalsNSNP R U add n (nominalsForm p1 U add n (nominalsForm p2 U nominalsNP Q))"
+  let ?ms = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+    nominalsNSNP R U add n ((nominalsForm p1 U nominalsForm p2) U nominalsNP Q)"
+  let ?pn = \<open>pos_countNSNP R + (pos_count p1 + (pos_count p2 + pos_countNP Q))\<close>
+  let ?pm = \<open>pos_countNSNP R + (pos_count p1 + pos_count p2 + pos_countNP Q)\<close>
+  let ?lhs = \<open>\<lambda> ps ns. 
+    size_atom_form ps (length R) (length ns) p1 +
+    (size_atom_form ps (length R) (length ns) p2 + n1_0 Q ps R ns) +
+    n2_0 ps R ns +
+    missing R ns\<close>
+  let ?rhs = \<open>\<lambda>ps ns.
+    size_atom_form ps (length R) (length ns) p1 + size_atom_form ps (length R) (length ns) p2 +
+    n1_0 Q ps R ns +
+    n2_0 ps R ns +
+    missing R ns\<close>
+  let ?show_this = "
+    (let ns = ?ns in 
+    let ps = ?pn in
+      ?lhs ps ns) < (
+    let ns = ?ms in
+    let ps = ?pm in Suc (
+      ?rhs ps ns))"
+  show "?show_this"
+  proof-
+    have isset: "is_set ?ns \<and> is_set ?ms"
+      by (simp add: NA_is_set union_is_set)
+
+    have setequal: "set_equal ?ns ?ms" 
+    proof -
+      have "set_equal 
+        ?ns
+        (add n (add n (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+          nominalsNN RP U nominalsNSNP R U (nominalsForm p1 U nominalsForm p2) U nominalsNP Q)))" 
+        by (smt (verit, del_insts) Un_assoc Un_insert_right add_simp set_equal_iff union_simp)
+      moreover have "
+        set_equal ...
+          (add n ((nominalsForm p1 U nominalsForm p2) U ns_1 LA RA RN LP RP R Q))" 
+        by (smt (z3) List.set_insert Un_left_commute add_simp in_set_insert insertCI 
+            set_equal_iff union_simp)
+      moreover have \<open>set_equal 
+        ...
+        (add n (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+           nominalsNSNP R U (nominalsForm p1 U nominalsForm p2) U nominalsNP Q))\<close>
+        by (smt (z3) Un_left_commute add_simp set_equal_iff union_simp)
+      moreover have \<open>set_equal ... ?ms\<close> 
+        by (metis Un_insert_right add_simp set_equal_iff union_simp)
+      ultimately show ?thesis 
+        by blast
+    qed
+
+    then have"
+      missing R ?ns = missing R ?ms" 
+      using isset missing_set_equal2 by blast
+    moreover have"
+      length ?ns = length ?ms" 
+      using isset set_size_equal setequal by blast
+    ultimately have "
+      ?lhs ?pn ?ns < 
+      Suc (?rhs ?pm ?ms)"
+        by (simp add: add.commute add.left_commute)
+    then show "?show_this" 
+        by (smt (z3) add.commute add.left_commute)  
+  qed
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix Q :: \<open>(nat \<times>'a hybr_form) list\<close>
+  fix n1 n2 :: nat
+  fix p :: "'a hybr_form"
+  let ?ns = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+    nominalsNSNP R U add n2 (nominalsForm p U nominalsNP Q)"
+  let ?ms = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+    nominalsNSNP R U add n1 (add n2 (nominalsForm p) U nominalsNP Q)"
+  let ?pn = \<open>pos_countNSNP R + (pos_count p + pos_countNP Q)\<close>
+  let ?pm = \<open>pos_countNSNP R + (pos_count p + pos_countNP Q)\<close>
+  let ?lhs = \<open>\<lambda> ps ns. 
+    size_atom_form ps (length R) (length ns) p + n1_0 Q ps R ns + n2_0 ps R ns + missing R ns\<close>
+  let ?rhs = \<open>\<lambda>ps ns.
+    size_atom_form ps (length R) (length ns) p + n1_0 Q ps R ns + n2_0 ps R ns + missing R ns\<close>
+  let ?show_this = "
+    (let ns = ?ns in 
+    let ps = ?pn in
+      ?lhs ps ns) < (
+    let ns = ?ms in
+    let ps = ?pm in Suc (
+      ?rhs ps ns))"
+  show "?show_this"
+  proof-
+    have isset: "is_set ?ns \<and> is_set ?ms"
+      by (simp add: NA_is_set union_is_set)
+
+    have subset: "sub_set ?ns ?ms" 
+      by (smt (z3) member.simps(2) add_def member_sub_set union_member)
+
+    then have 1:"
+      missing R ?ns \<le> missing R ?ms"
+      using isset missing_sub_set2 by blast
+    moreover have 2:"
+      length ?ns \<le> length ?ms"  
+      using isset sub_set_size subset by auto
+    moreover have "
+      size_atom_form ?pn (length R) (length ?ns) p \<le> size_atom_form ?pm (length R) (length ?ms) p" 
+      by (simp add: "2" size_atom_form_size_ns)
+    moreover have "
+      n1_0 Q ?pn R ?ns \<le> n1_0 Q ?pm R ?ms" 
+      using "2" n1_0_ps_less by blast
+    moreover have "
+      n2_0 ?pn R ?ns \<le> n2_0 ?pm R ?ms" 
+      using "2" n2_0_ps_less by blast
+    ultimately have "
+      ?lhs ?pn ?ns < 
+      Suc (?rhs ?pm ?ms)" 
+      by (meson le_imp_less_Suc lesser_add)
+    then show "?show_this" 
+        by (smt (z3) add.commute add.left_commute)  
+  qed
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix Q :: \<open>(nat \<times>'a hybr_form) list\<close>
+  fix n :: nat
+  fix p :: "'a hybr_form"
+  let ?fresh = \<open>
+    fresh (
+      nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+      nominalsNSNP R U add n (nominalsForm p U nominalsNP Q))\<close>
+  let ?ns = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U
+    add n (add (?fresh) (nominalsNN LP)) U
+    nominalsNN RP U nominalsNSNP R U
+    add (?fresh) (nominalsForm p U nominalsNP Q)"
+  let ?ms = "
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
+    nominalsNSNP R U add n (nominalsForm p U nominalsNP Q)"
+  let ?pn = \<open>pos_countNSNP R + (pos_count p + pos_countNP Q)\<close>
+  let ?pm = \<open>pos_countNSNP R + (pos_count p + pos_countNP Q)\<close>
+  let ?lhs = \<open>\<lambda> ps ns. 
+    size_atom_form ps (length R) (length ns) p + n1_0 Q ps R ns + n2_0 ps R ns + missing R ns\<close>
+  let ?rhs = \<open>\<lambda> ns.
+    Suc (Suc (?pm + length R + length ns + 
+      size_atom_form (Suc (?pm)) (length R) (length ns) p +
+      n1_0 Q (Suc (?pm)) R ns +
+      n2_0 (Suc (?pm)) R ns +
+      missing R ns))\<close>
+  let ?show_this = "
+    (let ns = ?ns in 
+    let ps = ?pn in
+      ?lhs ps ns) < (
+    let ns = ?ms in Suc (
+      ?rhs ns))"
+  show "?show_this"
+  proof-
+    have isset: "is_set ?ns \<and> is_set ?ms \<and> is_set (add ?fresh ?ms)" 
+      by (simp add: NA_is_set add_is_set union_is_set)
+
+    have setequal: "set_equal ?ns (add ?fresh ?ms)" 
+    proof-
+      have \<open>set_equal ?ns (
+        nominalsNA LA U nominalsNA RA U nominalsNN RN U
+        add n (add (?fresh) (nominalsNN LP) U
+        nominalsNN RP U nominalsNSNP R U
+        add (?fresh) (nominalsForm p U nominalsNP Q)))\<close> 
+        by (metis set_equal_commutative union_with_equal unionadd1)
+      moreover have \<open>set_equal ... (
+        add n (nominalsNA LA U nominalsNA RA U nominalsNN RN U
+        add (?fresh) (nominalsNN LP) U
+        nominalsNN RP U nominalsNSNP R U
+        add (?fresh) (nominalsForm p U nominalsNP Q)))\<close>
+        by (metis Un_insert_right add_simp set_equal_iff union_simp)
+      moreover have \<open>set_equal ...  (
+        add n (add (?fresh) (nominalsNA LA U nominalsNA RA U nominalsNN RN U
+        nominalsNN LP U
+        nominalsNN RP U nominalsNSNP R U
+        add (?fresh) (nominalsForm p U nominalsNP Q))))\<close>
+        by (smt (verit, del_insts) Un_assoc Un_insert_right add_simp insert_is_Un set_equal_iff
+            union_simp)
+      moreover have \<open>set_equal ... (
+        add n (add ?fresh (nominalsNA LA U nominalsNA RA U nominalsNN RN U
+        nominalsNN LP U
+        nominalsNN RP U nominalsNSNP R U
+        nominalsForm p U nominalsNP Q)))\<close>
+        by (smt (z3) Un_insert_right add_def add_simp insertCI member_iff set_equal_iff union_simp)
+      moreover have \<open>set_equal ... (
+        add ?fresh (add n (nominalsNA LA U nominalsNA RA U nominalsNN RN U
+        nominalsNN LP U
+        nominalsNN RP U nominalsNSNP R U
+        nominalsForm p U nominalsNP Q)))\<close>
+        by (metis union.simps(1) union.simps(2) unionadd1)
+      moreover have \<open>set_equal ... (add ?fresh ?ms)\<close> 
+        by (metis Un_insert_right add_simp set_equal_iff union_simp)
+      ultimately show ?thesis by blast
+    qed
+
+    then have \<open>missing R ?ns = missing R (add ?fresh ?ms)\<close> 
+      by (simp add: missing_set_equal2 isset)
+    moreover have "... \<le> missing R ?ms + (length R)"
+      by (simp add: missing_add_length)
+    ultimately have 1: "
+      missing R ?ns \<le> missing R ?ms + (length R)"
+      by simp
+    have "
+      length ?ns = length (add ?fresh ?ms)"  
+      using isset set_size_equal setequal by auto
+    moreover have"
+      ... \<le> length ?ms + 1"
+      using add_size by simp
+    ultimately have 2:\<open>length ?ns \<le> length ?ms + 1\<close> by simp
+    then have 3: \<open>?pn + length ?ns \<le> ?pm + (length ?ms + 1)\<close>
+        using 2 by simp
+    then have 4:\<open>?pn + (length R) + (length ?ns) \<le> (?pm + 1) + (length R) + length ?ms\<close> 
+      by simp
+    then have 5:"
+      size_atom_form ?pn (length R) (length ?ns) p \<le> 
+      size_atom_form (Suc (?pm)) (length R) (length ?ms) p" 
+      by (simp add: size_atom_suc_dec2)
+    have 6:"
+      n1_0 Q ?pn R ?ns \<le> n1_0 Q (Suc (?pm)) R ?ms"  
+    proof-
+      have \<open>?pn + length ?ns \<le> (Suc (?pm)) + length ?ms\<close> 
+        using 3 by simp
+      then show ?thesis 
+        using n1_0_suc_dec2 by (metis add_le_cancel_right)
+    qed
+    have 7:"
+      n2_0 ?pn R ?ns \<le> n2_0 (Suc (?pm)) R ?ms" 
+    proof-
+      have \<open>?pn + length ?ns \<le> (Suc (?pm)) + length ?ms\<close>
+        using 3 by simp
+      then show ?thesis
+        using n2_0_suc_dec2 by metis
+    qed
+    have "
+      size_atom_form ?pn (length R) (length ?ns) p + 
+      n1_0 Q ?pn R ?ns + n2_0 ?pn R ?ns + missing R ?ns \<le> 
+      size_atom_form (Suc (?pm)) (length R) (length ?ms) p +
+      n1_0 Q (Suc (?pm)) R ?ms + n2_0 (Suc (?pm)) R ?ms +
+      missing R ?ms + (length R)" 
+    proof-
+      have \<open>
+        size_atom_form ?pn (length R) (length ?ns) p + n1_0 Q ?pn R ?ns \<le>
+        size_atom_form (Suc (?pm)) (length R) (length ?ms) p + n1_0 Q (Suc (?pm)) R ?ms\<close>
+        using 5 6 by simp
+      then show ?thesis 
+        using 1 7 by simp
+    qed
+    then have \<open>
+      size_atom_form ?pn (length R) (length ?ns) p + 
+      n1_0 Q ?pn R ?ns + n2_0 ?pn R ?ns + missing R ?ns \<le> 
+      ?pm + length R + length ?ms + 
+      size_atom_form (Suc (?pm)) (length R) (length ?ms) p +
+      n1_0 Q (Suc (?pm)) R ?ms +
+      n2_0 (Suc (?pm)) R ?ms +
+      missing R ?ms\<close> 
+      by simp
+    then show "?show_this"
+      by (meson less_Suc_eq less_or_eq_imp_le not_less_eq not_less_eq_eq) 
+  qed
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R Rrem :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix n m :: nat
+  fix x2 y ya p yb yc
+  let ?ns = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      add n (add m (nominalsNN RP)) U nominalsNSNP Rrem\<close>
+  let ?ms = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R\<close>
+  assume a1:\<open>
+    saturate R ?ms =
+    Some x2\<close>
+  assume \<open>(n, y) = x2\<close>
+  moreover assume \<open>(m, ya) = y\<close>
+  moreover assume \<open>(p, yb) = ya\<close>
+  moreover assume \<open>(Rrem, yc) = yb\<close>
+  ultimately have a2:\<open>x2 = (n,m,p,Rrem,yc)\<close> 
+    by simp
+
+  have \<open>\<exists>R1 R2 ms. [] @ R = R1 @ [(n,ms,p)] @ R2 \<and> Rrem = R1 @ R2\<close>
+    using saturate_split a1 a2 by metis
+  then obtain R1 R2 ms where Rdef:"R = R1 @ [(n,ms,p)] @ R2 \<and> Rrem = R1 @ R2" 
+    by auto
+  obtain R3 where R3def: \<open>R3 = R1 @ [(n,ms,p)]\<close> by simp
+
+  have isset:\<open>is_set ?ns \<and> is_set ?ms\<close> 
+    by (simp add: NA_is_set union_is_set)
+
+  have subset:\<open>sub_set ?ns ?ms\<close>
+  proof-
+    have \<open>member n (nominalsNSNP R)\<close> 
+      using a1 a2 saturate_nom_members by blast
+    moreover have \<open>sub_set (nominalsNSNP Rrem) (nominalsNSNP R)\<close> 
+    proof-
+      have \<open>set_equal (nominalsNSNP Rrem) (nominalsNSNP R1 U nominalsNSNP R2)\<close> 
+        using Rdef  nominals_con by blast
+      moreover have \<open>
+        set_equal (nominalsNSNP R) (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)\<close>
+      proof-
+        have \<open>set_equal (nominalsNSNP R3) (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)])\<close>
+          using R3def nominals_con by blast
+        moreover have \<open>set_equal (nominalsNSNP R) (nominalsNSNP R3 U nominalsNSNP R2)\<close> 
+          by (metis R3def Rdef append.assoc nominals_con)
+        ultimately show ?thesis 
+          by (metis (no_types, hide_lams) Rdef nominals_con set_equal_associative union_with_equal)
+      qed
+      moreover have \<open>sub_set (nominalsNSNP R1 U nominalsNSNP R2) ...\<close> 
+        by (meson member_sub_set union_member)
+      ultimately show ?thesis 
+        by blast
+    qed
+    ultimately have 1:\<open>sub_set (add n (nominalsNSNP Rrem)) (nominalsNSNP R)\<close> 
+      by (metis add_def remove.simps(2) sub_set_def)
+    have 2:\<open>
+      set_equal ?ns (add m (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (add n (nominalsNSNP Rrem))))\<close> 
+      by (smt (verit, best) set_equal_associative set_equal_commutative 
+          union_with_equal unionadd1 unionadd2)
+
+    have \<open>member m ?ms\<close> 
+      using a1 a2 saturate_nom_members by blast
+    moreover have \<open>
+      sub_set (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (add n (nominalsNSNP Rrem))) ?ms\<close>
+      by (smt (z3) "1" member_sub_set union_member)
+    ultimately have \<open>
+      sub_set (add m (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (add n (nominalsNSNP Rrem)))) ?ms\<close>
+      by (metis add_def sub_set_union sub_set_union2 union.simps(1) union.simps(2))
+    then show ?thesis 
+      using 1 2 
+      by blast
+  qed
+  moreover have \<open>missing Rrem ?ns = missing R1 ?ns + missing R2 ?ns\<close>
+    by (simp add: Rdef miss_plus)
+  moreover have \<open>missing R ?ms = missing R1 ?ms + missing [(n,ms,p)] ?ms + missing R2 ?ms\<close> 
+    by (simp add: Rdef miss_plus)
+  moreover have \<open>missing R1 ?ns \<le> missing R1 ?ms\<close> 
+    by (meson NA_is_set calculation(1) missing_sub_set2 union_is_set)
+  moreover have \<open>missing R2 ?ns \<le> missing R2 ?ms\<close>
+    by (meson NA_is_set calculation(1) missing_sub_set2 union_is_set)
+  ultimately have 1:\<open>missing Rrem ?ns \<le> missing R ?ms\<close>
+    by linarith
+
+  have q:\<open>pos_countNSNP Rrem \<le> pos_countNSNP R\<close>
+  proof-
+    have "pos_countNSNP Rrem = pos_countNSNP R1 + pos_countNSNP R2" 
+      by (simp add: Rdef pos_count_con)
+    moreover have \<open>pos_countNSNP R = pos_countNSNP R1 + pos_countNSNP [(n,ms,p)] + pos_countNSNP R2\<close>
+      by (simp add: Rdef pos_count_con)
+    ultimately show ?thesis 
+      by simp
+  qed
+  have w:\<open>length Rrem < length R\<close> 
+  proof-
+    have \<open>length (R1 @ R2) < length (R1 @ [(n,ms,p)] @ R2)\<close> 
+      by simp
+    then show ?thesis
+      by (simp add: Rdef)
+  qed
+  have e:\<open>length ?ns \<le> length ?ms\<close> 
+    using isset sub_set_size subset by auto
+
+  have 2: \<open>n2_0 (pos_countNSNP Rrem) Rrem ?ns < n2_0 (pos_countNSNP R) R ?ms\<close> 
+  proof-
+    let ?n2 = \<open>\<lambda> R ps Rl ns. 
+      (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps Rl ns p))\<close>
+    have \<open>n2_0 (pos_countNSNP Rrem) Rrem ?ns = 
+      ?n2 R1 (pos_countNSNP Rrem) (length Rrem) (length ?ns) + 
+        ?n2 R2 (pos_countNSNP Rrem) (length Rrem) (length ?ns)\<close> 
+      by (simp add: Rdef)
+    moreover have \<open>n2_0 (pos_countNSNP R) R ?ms = 
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms) +
+        ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms) + 
+          ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close>
+      by (simp add: Rdef)
+    moreover have \<open>
+      ?n2 R1 (pos_countNSNP Rrem) (length Rrem) (length ?ns) \<le>
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms)\<close> 
+      using q w e by (simp add: n2_0_lesser less_or_eq_imp_le)
+    moreover have \<open>
+      ?n2 R2 (pos_countNSNP Rrem) (length Rrem) (length ?ns) \<le>
+      ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close>
+      using q w e by (simp add: n2_0_lesser less_or_eq_imp_le)
+    moreover have \<open>1 \<le> ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms)\<close> 
+    proof-
+      have \<open>
+        ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms) =
+        Suc (size_atom_form (pos_countNSNP R) (length R) (length ?ms) p)\<close> 
+        by simp
+      moreover have \<open>size_atom_form (pos_countNSNP R) (length R) (length ?ms) p \<ge> 0\<close> 
+        by simp
+      ultimately show ?thesis 
+        by fastforce
+    qed
+    ultimately show ?thesis 
+      by linarith
+  qed
+
+  then show \<open>
+    (let ns = ?ns in 
+      n2_0 (pos_countNSNP Rrem) Rrem ns + missing Rrem ns) < 
+    (let ns = ?ms in 
+      n2_0 (pos_countNSNP R) R ns + missing R ns)\<close> 
+    using 1 2 by (metis add_less_le_mono)
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R Rrem :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix n m :: nat
+  fix p :: \<open>'a hybr_form\<close>
+  fix x2 y ya yb yc 
+  let ?ns = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP Rrem U [] U add m (nominalsForm p)\<close>
+  let ?ms = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R\<close>
+  let ?ps = \<open>pos_countNSNP Rrem + pos_count p\<close>
+  assume a1:\<open>
+    saturate R ?ms =
+    Some x2\<close>
+  assume \<open>(n, y) = x2\<close>
+  moreover assume \<open>(m, ya) = y\<close>
+  moreover assume \<open>(p, yb) = ya\<close>
+  moreover assume \<open>(Rrem, yc) = yb\<close>
+  ultimately have a2:\<open>x2 = (n,m,p,Rrem,yc)\<close> 
+    by simp
+
+
+  have \<open>\<exists>R1 R2 ms. [] @ R = R1 @ [(n,ms,p)] @ R2 \<and> Rrem = R1 @ R2\<close>
+    using saturate_split a1 a2 by metis
+  then obtain R1 R2 ms where Rdef:"R = R1 @ [(n,ms,p)] @ R2 \<and> Rrem = R1 @ R2" 
+    by auto
+  obtain R3 where R3def: \<open>R3 = R1 @ [(n,ms,p)]\<close> by simp
+
+  have isset:\<open>is_set ?ns \<and> is_set ?ms\<close> 
+    by (simp add: NA_is_set union_is_set)
+
+  have subset:\<open>sub_set ?ns ?ms\<close>
+  proof-
+    have 1:\<open>member m ?ms\<close> 
+      using a1 a2 saturate_nom_members by blast
+
+    have 2:\<open>
+        set_equal (nominalsNSNP R) (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)\<close>
+    proof-
+      have \<open>set_equal (nominalsNSNP R3) (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)])\<close>
+        using R3def nominals_con by blast
+      moreover have \<open>set_equal (nominalsNSNP R) (nominalsNSNP R3 U nominalsNSNP R2)\<close> 
+        by (metis R3def Rdef append.assoc nominals_con)
+      ultimately show ?thesis 
+        by (metis (no_types, hide_lams) Rdef nominals_con set_equal_associative union_with_equal)
+    qed
+
+    have \<open>sub_set (nominalsNSNP Rrem) (nominalsNSNP R)\<close> 
+    proof-
+      have \<open>set_equal (nominalsNSNP Rrem) (nominalsNSNP R1 U nominalsNSNP R2)\<close> 
+        using Rdef  nominals_con by blast
+      moreover have \<open>sub_set (nominalsNSNP R1 U nominalsNSNP R2) 
+        (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)\<close> 
+        by (meson member_sub_set union_member)
+      ultimately show ?thesis 
+        using "2" by blast
+    qed
+    moreover have \<open>sub_set (nominalsForm p) (nominalsNSNP R)\<close>
+    proof-
+      have \<open>nominalsNSNP [(n,ms,p)] = nominalsNSNP [] U add n (ms U nominalsForm p)\<close> by simp
+      then have \<open>sub_set (nominalsForm p) (nominalsNSNP [(n,ms,p)])\<close>
+        by (smt (z3) ListSet.member.simps(2) add_def member_sub_set sub_set_union2)
+      then have \<open>sub_set (nominalsForm p) 
+        (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)\<close>
+        by (meson member_sub_set union_member)
+      then show ?thesis 
+        using 2 by simp
+    qed
+    ultimately have 3:\<open>sub_set (nominalsNSNP Rrem U nominalsForm p) (nominalsNSNP R)\<close>
+      by (meson sub_set_union)
+
+    have \<open>set_equal ?ns (add m (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP Rrem U [] U nominalsForm p))\<close> 
+      by (smt (verit, best) set_equal_associative set_equal_commutative 
+          union_with_equal unionadd1 unionadd2)
+    moreover have \<open>set_equal ... 
+      (add m (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (nominalsNSNP Rrem U nominalsForm p)))\<close> 
+      by (meson equal_add union_with_equal unionaddnt)
+    ultimately have 4:"set_equal ?ns ..."
+      by simp
+    have \<open>sub_set 
+      (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (nominalsNSNP Rrem U nominalsForm p))
+      ?ms\<close> 
+      by (smt (z3) 3 ListSet.member.simps(2) add_def member_sub_set sub_set_union sub_set_union1 
+          sub_set_union2 union.simps(1) union.simps(2) union_member)
+    then have \<open>sub_set (add m (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+        nominalsNN RP U (nominalsNSNP Rrem U nominalsForm p))) ?ms\<close> 
+      by (metis (no_types, lifting) "1" add_def remove.simps(2) sub_set_def)
+    then show ?thesis 
+      using 4 by blast
+  qed
+  moreover have \<open>missing Rrem ?ns = missing R1 ?ns + missing R2 ?ns\<close>
+    by (simp add: Rdef miss_plus)
+  moreover have \<open>missing R ?ms = missing R1 ?ms + missing [(n,ms,p)] ?ms + missing R2 ?ms\<close> 
+    by (simp add: Rdef miss_plus)
+  moreover have \<open>missing R1 ?ns \<le> missing R1 ?ms\<close> 
+    by (meson NA_is_set calculation(1) missing_sub_set2 union_is_set)
+  moreover have \<open>missing R2 ?ns \<le> missing R2 ?ms\<close>
+    by (meson NA_is_set calculation(1) missing_sub_set2 union_is_set)
+  ultimately have miss:\<open>missing Rrem ?ns \<le> missing R ?ms\<close>
+    by linarith
+
+  have pos: \<open>pos_countNSNP Rrem + pos_count p \<le> pos_countNSNP R\<close>
+    by (simp add: Rdef pos_count_con)
+
+  have len: \<open>length ?ns \<le> length ?ms\<close>
+    using isset sub_set_size subset by auto
+
+  have rlen: \<open>length Rrem < length R\<close> 
+  proof-
+    have "length (R1 @ R2) < length (R1 @ [(n,ms,p)] @ R2)" 
+      by simp
+    then show ?thesis 
+      by (simp add: Rdef)
+  qed
+
+  have n2: \<open>
+    size_atom_form ?ps (length Rrem) (length ?ns) p + n2_0 ?ps Rrem ?ns <
+    n2_0 (pos_countNSNP R) R ?ms\<close>
+  proof-
+    let ?n2 = \<open>\<lambda> R ps Rl ns. (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps Rl ns p))\<close>
+    have \<open>
+      n2_0 ?ps Rrem ?ns = 
+      ?n2 R1 ?ps (length Rrem) (length ?ns) +
+        ?n2 R2 ?ps (length Rrem) (length ?ns)\<close> 
+      by (simp add: Rdef)
+    then have \<open>
+      size_atom_form ?ps (length Rrem) (length ?ns) p + n2_0 ?ps Rrem ?ns =
+      size_atom_form ?ps (length Rrem) (length ?ns) p +
+        ?n2 R1 ?ps (length Rrem) (length ?ns) +
+          ?n2 R2 ?ps (length Rrem) (length ?ns)\<close>
+      by simp
+    moreover have \<open>
+      n2_0 (pos_countNSNP R) R ?ms = 
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms) +
+        ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms) +
+          ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close> 
+      by (simp add: Rdef)
+    moreover have \<open>
+      ?n2 R1 ?ps (length Rrem) (length ?ns) \<le>
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms)\<close> 
+      using pos len rlen by (simp add: n2_0_lesser less_or_eq_imp_le)
+    moreover have \<open>
+      ?n2 R2 ?ps (length Rrem) (length ?ns) \<le>
+      ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close>
+      using pos len rlen by (simp add: n2_0_lesser less_or_eq_imp_le)
+    moreover have \<open>
+      ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms) = 
+      Suc (size_atom_form (pos_countNSNP R) (length R) (length ?ms) p)\<close> by simp
+    moreover have \<open>... > size_atom_form ?ps (length Rrem) (length ?ns) p\<close> 
+    proof-
+      have "
+        size_atom_form ?ps (length Rrem) (length ?ns) p \<le>
+        size_atom_form (pos_countNSNP R) (length R) (length ?ms) p" 
+        using pos len rlen 
+        by (simp add: dual_order.strict_implies_order lesser_add size_atom_suc_dec2)
+      then show ?thesis 
+        by simp
+    qed
+    ultimately show ?thesis 
+      by simp
+  qed
+  show \<open>
+    (let ns = ?ns ;
+         ps = ?ps in 
+      size_atom_form ps (length Rrem) (length ns) p + n2_0 ps Rrem ns + missing Rrem ns) < 
+    (let ns = ?ms in 
+      n2_0 (pos_countNSNP R) R ns + missing R ns)\<close> 
+    using n2 miss by (metis add_less_le_mono)
+next
+  fix LA RA :: \<open>(nat \<times> 'a) list\<close>
+  fix RN :: \<open>(nat \<times> nat) list\<close>
+  fix LP RP :: \<open>(nat \<times> nat) list\<close>
+  fix R Rsat :: \<open>(nat \<times> nat list \<times>'a hybr_form) list\<close>
+  fix n m :: nat
+  fix p :: \<open>'a hybr_form\<close>
+  fix x2 y ya yb xc 
+  let ?ns = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP Rsat\<close>
+  let ?ms = \<open>
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U nominalsNSNP R\<close>
+  assume a1:\<open>
+    saturate R ?ms =
+    Some x2\<close>
+  assume \<open>(n, y) = x2\<close>
+  moreover assume \<open>(m, ya) = y\<close>
+  moreover assume \<open>(p, yb) = ya\<close>
+  moreover assume \<open>(xc, Rsat) = yb\<close>
+  ultimately have a2:\<open>saturate R ?ms = Some (n,m,p,xc,Rsat)\<close> 
+    by (simp add: a1)
+
+  have \<open>(\<exists> R1 R2 ms ms'. Rsat = R1 @ [(n,m # ms,p)] @ R2 \<and> [] @ R = R1 @ [(n,ms,p)] @ R2 \<and> 
+      remove ?ms ms = m # ms')\<close>
+    using saturate_split2 a2 by metis
+  then obtain R1 R2 ms ms' where Rdef:\<open>Rsat = R1 @ [(n,m # ms,p)] @ R2 \<and> R = R1 @ [(n,ms,p)] @ R2\<and> 
+      remove ?ms ms = m # ms'\<close>
+    by auto
+
+  have isset: \<open>is_set ?ns \<and> is_set ?ms\<close>
+    by (simp add: NA_is_set union_is_set)
+
+  have \<open>set_equal (nominalsNSNP Rsat) (add m (nominalsNSNP R))\<close>
+  proof-
+    obtain R3 where R3def:\<open>R3 = R1 @ [(n,m # ms,p)]\<close> by simp
+    obtain R4 where R4def:\<open>R4 = R1 @ [(n,ms,p)]\<close> by simp
+    have \<open>set_equal (nominalsNSNP R3) (nominalsNSNP R1 U nominalsNSNP [(n,m # ms,p)])\<close>
+      by (metis R3def nominals_con)
+    moreover have "
+      set_equal (nominalsNSNP Rsat) 
+        (nominalsNSNP R3 U nominalsNSNP R2)" 
+      by (metis Rdef R3def append.assoc nominals_con)
+    ultimately have 1:\<open>
+      set_equal (nominalsNSNP Rsat) 
+        (nominalsNSNP R1 U nominalsNSNP [(n,m # ms,p)] U nominalsNSNP R2)\<close> 
+      by (metis (no_types, hide_lams) Rdef nominals_con set_equal_associative union_with_equal)
+    
+    have \<open>set_equal (nominalsNSNP R4) (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)])\<close>
+      by (metis R4def nominals_con)
+    moreover have "
+      set_equal (nominalsNSNP R) 
+        (nominalsNSNP R4 U nominalsNSNP R2)" 
+      by (metis Rdef R4def append.assoc nominals_con)
+    ultimately have 2:\<open>
+      set_equal (nominalsNSNP R) 
+        (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)\<close> 
+      by (metis (no_types, hide_lams) Rdef nominals_con set_equal_associative union_with_equal)
+
+    have 3:\<open>set_equal (nominalsNSNP [(n,m # ms,p)]) (m # (nominalsNSNP [(n,ms,p)]))\<close>
+    proof-
+      have \<open>set_equal (nominalsNSNP [(n,m # ms,p)]) (add n ((m # ms) U nominalsForm p))\<close>
+        using unionaddnt by force
+      moreover have \<open>set_equal ... (add n (m # (ms U nominalsForm p)))\<close> 
+        by (metis equal_add set_equal_append_add set_equal_associative set_equal_commutative 
+            union.simps(2) union_commutative unionadd2)
+      moreover have \<open>set_equal ... (m # (add n (ms U nominalsForm p)))\<close> 
+        by (meson set_equal_add_con)
+      moreover have \<open>set_equal ... (m # (nominalsNSNP [(n,ms,p)]))\<close> 
+        by (metis nominalsNSNP.simps(1) nominalsNSNP.simps(2) set_equal_append_add 
+            set_equal_associative set_equal_commutative unionadd2 unionaddnt)
+      ultimately show ?thesis 
+        by (meson set_equal_associative)
+    qed
+    then have \<open>set_equal (nominalsNSNP [(n,m # ms,p)] U nominalsNSNP R2)
+        ((m # nominalsNSNP [(n,ms,p)]) U nominalsNSNP R2)\<close> 
+      by (meson union_with_equal2)
+    moreover have \<open>set_equal ... (add m (nominalsNSNP [(n,ms,p)] U nominalsNSNP R2))\<close> 
+      by (meson set_equal_append_add set_equal_associative set_equal_commutative 
+          union_with_equal2 unionadd1)
+    ultimately have \<open>
+      set_equal (nominalsNSNP [(n,m # ms,p)] U nominalsNSNP R2)
+        (add m (nominalsNSNP [(n,ms,p)] U nominalsNSNP R2))\<close> 
+      by simp
+    then have \<open>
+      set_equal (nominalsNSNP R1 U nominalsNSNP [(n,m # ms,p)] U nominalsNSNP R2)
+        (nominalsNSNP R1 U (add m (nominalsNSNP [(n,ms,p)] U nominalsNSNP R2)))\<close>
+      by (meson union_with_equal)
+    then have \<open>
+      set_equal (nominalsNSNP R1 U nominalsNSNP [(n,m # ms,p)] U nominalsNSNP R2)
+        (add m (nominalsNSNP R1 U nominalsNSNP [(n,ms,p)] U nominalsNSNP R2))\<close> 
+      by (meson set_equal_associative set_equal_commutative unionadd2)
+    then show ?thesis
+      using 1 2  
+      by (meson equal_add set_equal_associative set_equal_commutative)
+  qed
+  then have \<open>set_equal ?ns (
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U (add m (nominalsNSNP R)))\<close> 
+    by (meson double_union_equal set_equal_reflexive)
+  moreover have \<open>set_equal ... (
+    nominalsNA LA U nominalsNA RA U nominalsNN RN U add m (nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP R))\<close> 
+    by (meson set_equal_associative set_equal_commutative union_with_equal unionadd2)
+  moreover have \<open>set_equal ... (add m ?ms)\<close> 
+    by (meson set_equal_associative set_equal_commutative union_with_equal unionadd2)
+  ultimately have \<open>set_equal ?ns (add m ?ms)\<close> by simp
+  moreover have \<open>member m ?ms\<close> 
+    by (meson a2 saturate_nom_members) 
+  then have subset: \<open>sub_set ?ns ?ms\<close> 
+    by (metis add_def calculation set_equal_def sub_set_def)
+
+  have \<open>missing Rsat ?ns \<le> missing Rsat ?ms\<close> 
+    by (meson isset missing_sub_set2 subset)
+  moreover have \<open>missing Rsat ?ms < missing ([] @ R) ?ms\<close>
+    using saturate_size2 a2 by metis
+  ultimately have miss:\<open>missing Rsat ?ns < missing R ?ms\<close>
+    by fastforce
+
+  have pos: \<open>pos_countNSNP Rsat \<le> pos_countNSNP R\<close>
+    by (simp add: Rdef pos_count_con)
+
+  have Rlen: \<open>length Rsat \<le> length R\<close> 
+    using Rdef by simp
+
+  have len: \<open>length ?ns \<le> length ?ms\<close>
+    using isset subset sub_set_size by auto
+
+  have n2:\<open>n2_0 (pos_countNSNP Rsat) Rsat ?ns \<le> n2_0 (pos_countNSNP R) R ?ms\<close>
+  proof-
+    let ?n2 = \<open>\<lambda> R ps Rl ns. (\<Sum>(u, u', p)\<leftarrow>R. Suc (size_atom_form ps Rl ns p))\<close>
+    have \<open>
+      n2_0 (pos_countNSNP Rsat) Rsat ?ns = 
+      ?n2 R1 (pos_countNSNP Rsat) (length Rsat) (length ?ns) +
+        ?n2 [(n,m # ms,p)] (pos_countNSNP Rsat) (length Rsat) (length ?ns) +
+          ?n2 R2 (pos_countNSNP Rsat) (length Rsat) (length ?ns)\<close> 
+      by (simp add: Rdef)
+    moreover have \<open>
+      n2_0 (pos_countNSNP R) R ?ms = 
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms) +
+        ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms) +
+          ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close> 
+      by (simp add: Rdef)
+    moreover have \<open>
+      ?n2 R1 (pos_countNSNP Rsat) (length Rsat) (length ?ns) \<le>
+      ?n2 R1 (pos_countNSNP R) (length R) (length ?ms)\<close> 
+      by (simp add: Rlen len n2_0_lesser pos)
+    moreover have \<open>
+      ?n2 R2 (pos_countNSNP Rsat) (length Rsat) (length ?ns) \<le>
+      ?n2 R2 (pos_countNSNP R) (length R) (length ?ms)\<close>
+      by (simp add: Rlen len n2_0_lesser pos)
+    moreover have \<open>
+      ?n2 [(n,m # ms,p)] (pos_countNSNP Rsat) (length Rsat) (length ?ns) \<le>
+      ?n2 [(n,ms,p)] (pos_countNSNP R) (length R) (length ?ms)\<close> (is \<open>?L \<le> ?R\<close>)
+    proof-
+      have \<open>?L = Suc (size_atom_form (pos_countNSNP Rsat) (length Rsat) (length ?ns) p)\<close> by simp
+      moreover have \<open>... \<le> Suc (size_atom_form (pos_countNSNP R) (length R) (length ?ms) p)\<close> 
+        using len Rlen pos  
+        by (simp add: dual_order.strict_implies_order lesser_add size_atom_suc_dec2)
+      moreover have \<open>... = ?R\<close> by simp
+      ultimately show ?thesis 
+        by linarith
+    qed
+    ultimately show ?thesis 
+      using lesser_add by presburger
+  qed
+
+  show \<open>
+    (let ns = ?ns in
+      n2_0 (pos_countNSNP Rsat) Rsat ns + missing Rsat ns) < 
+    (let ns = ?ms in 
+      n2_0 (pos_countNSNP R) R ns + missing R ns)\<close> 
+    using n2 miss by (metis add_mono_thms_linordered_field(4))
 qed 
-  
 
 (*tautology definition*)
 definition prover where 

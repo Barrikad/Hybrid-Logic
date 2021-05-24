@@ -101,8 +101,24 @@ lemma set_equal_iff[iff]: "set_equal A B \<longleftrightarrow> set A = set B"
   by (smt (verit) Diff_cancel Un_Diff_cancel Un_left_commute 
       remove_simp set_empty2 set_equal_def sup_bot.right_neutral)
 
+lemma set_equal_reflexive: \<open>set_equal A A\<close> 
+  by simp
+
 lemma set_equal_commutative: \<open>set_equal A B \<longleftrightarrow> set_equal B A\<close>
   by auto
+
+lemma set_equal_associative: \<open>set_equal A B \<Longrightarrow> set_equal B C \<Longrightarrow> set_equal A C\<close>
+  by simp
+
+lemma union_commutative: \<open>set_equal (A U B) (B U A)\<close> 
+  apply simp 
+  by (metis Un_commute union_simp)
+
+lemma union_associative: \<open>set_equal (A U (B U C)) ((A U B) U C)\<close>
+  by (metis boolean_algebra_cancel.sup1 set_equal_iff union_simp)
+
+lemma union_reflexive:\<open>set_equal A (A U A)\<close>
+  by (metis set_equal_iff sup.idem union_simp)
 
 lemma equal_add: \<open>set_equal A B \<Longrightarrow> set_equal (add a A) (add a B)\<close> 
   by (metis add_simp set_equal_iff)
@@ -113,8 +129,8 @@ lemma unionadd1: \<open>set_equal (add a (A U B)) ((add a A) U B)\<close>
 lemma unionadd11: \<open>set_equal (add a (add b (A U B))) ((add a (add b A)) U B)\<close> 
   by (metis add_simp set_equal_iff unionadd1)
 
-lemma unionadd2: \<open>set_equal (add a (A U B)) (A U (add a B))\<close>
-  by (metis Un_insert_right add_simp set_equal_iff union_simp)
+lemma unionadd2: \<open>set_equal (add a (A U B)) (A U (add a B))\<close> 
+  by (metis add_simp set_equal_iff union_commutative unionadd1)
 
 lemma unionaddnt: \<open>set_equal ([] U B) B\<close>
 proof (induct B)
@@ -127,23 +143,20 @@ next
         list.simps(15) set_equal_iff union.simps(2) unionadd1)
 qed 
 
-lemma union_associativity: \<open>set_equal (A U (B U C)) ((A U B) U C)\<close>
-  by (metis boolean_algebra_cancel.sup1 set_equal_iff union_simp)
-
-lemma remove_equal: \<open>set_equal A B \<Longrightarrow> set_equal (remove A C) (remove B C)\<close>
-  by (metis remove_simp set_equal_iff)
-
-lemma set_equal_union: \<open>set_equal A B \<Longrightarrow> set_equal (C U A) (C U B)\<close>
+lemma union_with_equal: \<open>set_equal A B \<Longrightarrow> set_equal (C U A) (C U B)\<close>
   apply (induct C)
    apply (metis set_equal_iff unionaddnt)
   apply simp
   by (metis union_simp)
 
-lemma set_equal_union2: \<open>set_equal A B \<Longrightarrow> set_equal (A U C) (B U C)\<close>
+lemma union_with_equal2: \<open>set_equal A B \<Longrightarrow> set_equal (A U C) (B U C)\<close>
   by (metis set_equal_iff union_simp)
 
 lemma set_equal_append_add: \<open>set_equal (a # A) (add a A)\<close> 
   by simp
+
+lemma remove_equal: \<open>set_equal A B \<Longrightarrow> set_equal (remove A C) (remove B C)\<close>
+  by (metis remove_simp set_equal_iff)
 
 lemma remove_commute: \<open>set_equal (remove (remove A B) C) (remove A (C @ B))\<close> 
 proof (induct A)
@@ -198,7 +211,7 @@ next
   moreover have \<open>set_equal ... (remove (B @ A) (a # B))\<close> 
     by (metis append_Cons append_Nil remove_commute)
   moreover have \<open>set_equal ... (remove (a # B @ A) (a # B))\<close> 
-    by (metis ListSet.member.simps(2) remove.simps(2) set_equal_union union.simps(1) unionaddnt)
+    by (metis ListSet.member.simps(2) remove.simps(2) union_with_equal union.simps(1) unionaddnt)
   ultimately show ?case
     by simp
 qed 
@@ -222,9 +235,20 @@ proof -
   assume a1:"?A1"
   assume a2:\<open>?A2\<close>
   have \<open>set_equal (A U B) (A U D)\<close> 
-    by (meson a2 set_equal_union)
+    by (meson a2 union_with_equal)
   then show ?C 
     by (metis a1 set_equal_iff union_simp)
+qed
+
+lemma set_equal_add_con: \<open>set_equal (add a (b # A)) (b # (add a A))\<close> 
+proof-
+  have \<open>set_equal (add a (b # A)) (add a (add b A))\<close> 
+    by (meson equal_add set_equal_append_add)
+  moreover have \<open>set_equal ... (add b (add a A))\<close> 
+    by (metis calculation set_equal_associative set_equal_commutative union.simps(1) 
+        union.simps(2) union_commutative unionadd2)
+  ultimately show ?thesis 
+    by simp
 qed
 (*\SETEQUAL*)
 
@@ -284,6 +308,12 @@ lemma sub_remove_set: \<open>sub_set A B \<Longrightarrow> sub_set (remove A C) 
   apply (induct A) 
    apply simp 
   by (metis list.distinct(1) remove.simps(2) sub_set_def)
+
+lemma sub_remove_middle: \<open>A = A1 @ A2 @ A3 \<Longrightarrow> A' = A1 @ A3 \<Longrightarrow> sub_set A' A\<close>
+  apply (induct A1 arbitrary: A A') 
+   apply simp
+   apply (meson sub_set_iff sub_set_union2)
+  by (metis (full_types) Cons_eq_appendI ListSet.member.simps(2) member_sub_set)
 (*\SUBSET*)
 
 (*ISSET*)
@@ -415,6 +445,17 @@ next
     then show ?thesis 
       using Cons.prems(2) calculation(1) is_set_size by fastforce
   qed
+qed
+
+lemma add_size: \<open>length (add a A) \<le> length A + 1\<close> 
+proof cases
+  assume "member a A"
+  then show ?thesis 
+    by (simp add: add_def)
+next
+  assume "\<not> member a A"
+  then show ?thesis 
+    by (metis One_nat_def add_def eq_imp_le list.size(4))
 qed
 (*\ISSET*)
 end
