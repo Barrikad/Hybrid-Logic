@@ -60,7 +60,7 @@ primrec ST where
   \<open>ST n (Pos p) nxt = ExRel n nxt (ST nxt p (Suc nxt))\<close>
 
 theorem correctST: \<open>hybr_semantics W R V G w p 
- = fol_semantics W R V (almostAgree G (Suc (maxNom p 0 + 1)) w) 
+ = fol_semantics W R V (almostAgree G (Suc (maxNom p 0)) w) 
     (ST (Suc (maxNom p 0)) p (Suc (Suc (maxNom p 0))))\<close>
   sorry
 
@@ -69,10 +69,10 @@ primrec HT :: \<open>'a fol_form \<Rightarrow> 'a hybr_form\<close> where
   \<open>HT (Eq n1 n2) = Sat n1 (Nom n2)\<close> |
   \<open>HT (FNeg p) = HNeg (HT p)\<close> |
   \<open>HT (FCon p1 p2) = HCon (HT p1) (HT p2)\<close> |
-  \<open>HT (ExRel n1 n2 p) = HCon (Sat n1 (Pos (Nom n2))) (Sat n2 (HT p))\<close>
+  \<open>HT (ExRel n1 n2 p) = Sat n1 (Pos (HT p))\<close>
 
 theorem correctHT: \<open>fol_semantics W R V G p 
   = hybr_semantics W R V G w (HT p)\<close>
-  sorry
+  nitpick
 
 end
