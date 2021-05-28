@@ -3606,9 +3606,319 @@ next
 qed 
 end
 
-(*truth-definitions*)
+(*auxiliary*)
 definition agrees where \<open>agrees f x y = (\<lambda> x'. if x' = x then y else f x')\<close>
 
+lemma exi_pop: \<open>(\<exists> x' \<in> set (x # xs). P x') \<longleftrightarrow> ((\<exists> x' \<in> set xs. P x') \<or> P x)\<close> 
+  by (metis list.set_intros(1) list.set_intros(2) set_ConsD)
+
+lemma fa_pop: \<open>(\<forall> x' \<in> set (x # xs). P x') \<longleftrightarrow> ((\<forall> x' \<in> set xs. P x') \<and> P x)\<close> 
+  by (metis list.set_intros(1) list.set_intros(2) set_ConsD)
+
+lemma merge_NS_exi_1: \<open>
+  n \<in> set (mergeNS ns n1 n2) \<longrightarrow> 
+    (\<exists> n' \<in> set ns. (if n' = n1 then n = n2 else n = n'))\<close> 
+proof (induct ns)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons n' ns)
+  show ?case 
+  proof
+    assume "n \<in> set (mergeNS (n' # ns) n1 n2)"
+    then have 
+      \<open>n \<in> set (mergeNS [n'] n1 n2) \<or> n \<in> set (mergeNS ns n1 n2)\<close>
+      using last_ConsL set_ConsD by fastforce
+    moreover have \<open>n \<in> set (mergeNS [n'] n1 n2) \<Longrightarrow> 
+      (if n' = n1 then n = n2 else n = n')\<close> 
+      by auto
+    moreover have \<open>n' \<in> set (n' # ns)\<close> 
+      by (metis list.set_intros(1))
+    moreover have \<open>n \<in> set (mergeNS ns n1 n2) \<Longrightarrow> \<exists>n'' \<in> set (n' # ns).
+       (if n'' = n1 then n = n2 else n = n'')\<close> 
+      by (meson Cons.hyps list.set_intros(2))
+    ultimately show "\<exists>n' \<in> set (n' # ns).
+       (if n' = n1 then n = n2 else n = n')" 
+      by blast
+  qed
+qed
+
+lemma merge_NS_exi_2: \<open>
+  n' \<in> set ns \<longrightarrow> 
+    (\<exists> n \<in> set (mergeNS ns n1 n2). (if n' = n1 then n = n2 else n = n'))\<close> 
+proof (induct ns)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons n ns)
+  show ?case 
+  proof
+    assume a:"n' \<in> set (n # ns)"
+    then have 
+      \<open>n' = n \<or> n' \<in> set ns\<close>
+      using last_ConsL set_ConsD by fastforce
+    moreover have \<open>n = n' \<Longrightarrow> 
+      (\<exists> n \<in> set (mergeNS (n # ns) n1 n2). (if n' = n1 then n = n2 else n = n'))\<close> 
+      by (metis ListSet.member.simps(2) member_iff member_mergeNS2 member_mergeNS3)
+    ultimately show "
+      (\<exists> n \<in> set (mergeNS (n # ns) n1 n2). (if n' = n1 then n = n2 else n = n'))" 
+      by (metis a member_iff member_mergeNS2 member_mergeNS3) 
+  qed
+qed
+
+lemma merge_NSNP_exi_1: \<open>
+  (n,ns,p) \<in> set (mergeNSNP nsnp n1 n2) \<longrightarrow> 
+    (\<exists> (n',ns',p') \<in> set nsnp. (if n' = n1 then n = n2 else n = n') \<and> 
+      ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2)\<close> 
+proof (induct nsnp arbitrary: n ns p)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nsnp)
+  obtain n' ns' p' where adef:\<open>a = (n',ns',p')\<close> 
+    using prod_cases3 by blast
+  show ?case 
+  proof
+    assume "(n, ns, p) \<in> set (mergeNSNP (a # nsnp) n1 n2)"
+    then have 
+      \<open>(n,ns,p) \<in> set (mergeNSNP [a] n1 n2) \<or> (n,ns,p) \<in> set (mergeNSNP nsnp n1 n2)\<close>
+      using adef last_ConsL set_ConsD by fastforce
+    moreover have \<open>(n,ns,p) \<in> set (mergeNSNP [a] n1 n2) \<Longrightarrow> 
+      (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2\<close> 
+      using adef by auto
+    moreover have \<open>(n', ns', p') \<in> set (a # nsnp)\<close> 
+      by (metis adef list.set_intros(1))
+    moreover have \<open>(n,ns,p) \<in> set (mergeNSNP nsnp n1 n2) \<Longrightarrow> \<exists>(n', ns', p')\<in>set (a # nsnp).
+       (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2\<close> 
+      by (metis (no_types, lifting) Cons.hyps exi_pop)
+    ultimately show "\<exists>(n', ns', p')\<in>set (a # nsnp).
+       (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2"
+      by auto
+  qed
+qed
+
+lemma merge_NSNP_exi_2: \<open>
+  (n',ns',p') \<in> set nsnp \<Longrightarrow> 
+    \<exists> (n,ns,p) \<in> set (mergeNSNP nsnp n1 n2). 
+      (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2\<close> 
+proof (induct nsnp)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nsnp)
+  consider \<open>(n',ns',p') = a\<close> | \<open>(n',ns',p') \<in> set nsnp\<close>  
+    by (metis Cons.prems set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      using list.set_intros(1) by fastforce
+  next
+    case 2
+    then have \<open>\<exists> (n, ns, p) \<in> set (mergeNSNP nsnp n1 n2).
+       (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2\<close> 
+      using Cons.hyps by auto
+    then obtain n ns p where 
+      \<open>(n, ns, p) \<in> set (mergeNSNP nsnp n1 n2) \<and> 
+        (if n' = n1 then n = n2 else n = n') \<and> ns = mergeNS ns' n1 n2 \<and> p = mergeP p' n1 n2\<close> 
+      by blast
+    moreover have \<open>(n, ns, p) \<in> set (mergeNSNP (a # nsnp) n1 n2)\<close>
+      by (metis calculation list.set_intros(2) mergeNSNP.simps(2) prod_cases3)
+    ultimately show ?thesis 
+      by blast
+  qed
+qed
+
+lemma merge_NN_exi_1: \<open>
+  (na,nb) \<in> set (mergeNN nn n1 n2) \<longrightarrow> 
+    (\<exists> (na',nb') \<in> set nn. (if na' = n1 then na = n2 else na = na') \<and> 
+      (if nb' = n1 then nb = n2 else nb = nb'))\<close> 
+proof (induct nn)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nn)
+  obtain na' nb' where adef:\<open>a = (na',nb')\<close> 
+    using prod.exhaust_sel by blast
+  show ?case 
+  proof
+    assume "(na, nb) \<in> set (mergeNN (a # nn) n1 n2)"
+    then have 
+      \<open>(na,nb) \<in> set (mergeNN [a] n1 n2) \<or> (na,nb) \<in> set (mergeNN nn n1 n2)\<close>
+      using adef last_ConsL set_ConsD by fastforce
+    moreover have \<open>(na,nb) \<in> set (mergeNN [a] n1 n2) \<Longrightarrow> 
+      (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+      using adef by auto
+    moreover have \<open>(na', nb') \<in> set (a # nn)\<close> 
+      by (metis adef list.set_intros(1))
+    moreover have \<open>(na,nb) \<in> set (mergeNN nn n1 n2) \<Longrightarrow> \<exists>(na', nb')\<in>set (a # nn).
+      (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+      by (metis (no_types, lifting) Cons.hyps exi_pop)
+    ultimately show "\<exists>(na', nb')\<in>set (a # nn).
+      (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')"
+      by blast
+  qed
+qed
+
+lemma merge_NN_exi_2: \<open>
+  (na',nb') \<in> set nn \<Longrightarrow> 
+    \<exists> (na,nb) \<in> set (mergeNN nn n1 n2). 
+      (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+proof (induct nn)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nn)
+  consider \<open>(na',nb') = a\<close> | \<open>(na',nb') \<in> set nn\<close>  
+    by (metis Cons.prems set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      using list.set_intros(1) by fastforce
+  next
+    case 2
+    then have \<open>\<exists> (na, nb) \<in> set (mergeNN nn n1 n2).
+       (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+      using Cons.hyps by auto
+    then obtain na nb where 
+      \<open>(na, nb) \<in> set (mergeNN nn n1 n2) \<and> 
+        (if na' = n1 then na = n2 else na = na') \<and> (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+      by blast
+    moreover have \<open>(na, nb) \<in> set (mergeNN (a # nn) n1 n2)\<close>
+      by (metis List.insert_def calculation list.inject list.set_intros(2) mergeNN.simps(2) 
+          neq_Nil_conv nominalsNN.cases old.prod.exhaust)
+    ultimately show ?thesis 
+      by blast
+  qed
+qed
+
+lemma merge_NA_exi_1: \<open>
+  (n,a) \<in> set (mergeNA na n1 n2) \<longrightarrow> 
+    (\<exists> (n',a') \<in> set na. (if n' = n1 then n = n2 else n = n') \<and> a' = a)\<close> 
+proof (induct na)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons b na)
+  obtain n' a' where adef:\<open>b = (n',a')\<close> 
+    using prod.exhaust_sel by blast
+  show ?case 
+  proof
+    assume "(n, a) \<in> set (mergeNA (b # na) n1 n2)"
+    then have 
+      \<open>(n,a) \<in> set (mergeNA [b] n1 n2) \<or> (n,a) \<in> set (mergeNA na n1 n2)\<close>
+      using adef last_ConsL set_ConsD by fastforce
+    moreover have \<open>(n,a) \<in> set (mergeNA [b] n1 n2) \<Longrightarrow> 
+      (if n' = n1 then n = n2 else n = n') \<and> a' = a\<close> 
+      using adef by auto
+    moreover have \<open>(n', a') \<in> set (b # na)\<close> 
+      by (metis adef list.set_intros(1))
+    moreover have \<open>(n,a) \<in> set (mergeNA na n1 n2) \<Longrightarrow> \<exists>(n', a')\<in>set (b # na).
+      (if n' = n1 then n = n2 else n = n') \<and> a' = a\<close> 
+      by (metis (no_types, lifting) Cons.hyps exi_pop)
+    ultimately show "\<exists>(n', a')\<in>set (b # na).
+      (if n' = n1 then n = n2 else n = n') \<and> a' = a"
+      by blast
+  qed
+qed
+
+lemma merge_NA_exi_2: \<open>
+  (n',a') \<in> set na \<Longrightarrow> 
+    \<exists> (n,a) \<in> set (mergeNA na n1 n2). 
+      (if n' = n1 then n = n2 else n = n') \<and> a = a'\<close> 
+proof (induct na)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a na)
+  consider \<open>(n',a') = a\<close> | \<open>(n',a') \<in> set na\<close>  
+    by (metis Cons.prems set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      using list.set_intros(1) by fastforce
+  next
+    case 2
+    then have \<open>\<exists> (n, a) \<in> set (mergeNA na n1 n2).
+       (if n' = n1 then n = n2 else n = n') \<and> a = a'\<close> 
+      using Cons.hyps by auto
+    then obtain n a'' where 
+      \<open>(n, a'') \<in> set (mergeNA na n1 n2) \<and> 
+        (if n' = n1 then n = n2 else n = n') \<and> a'' = a'\<close> 
+      by blast
+    moreover have \<open>(n, a'') \<in> set (mergeNA (a # na) n1 n2)\<close> 
+      by (metis calculation list.distinct(1) list.inject list.set_intros(2) mergeNA.elims)
+    ultimately show ?thesis 
+      by blast
+  qed
+qed
+
+lemma merge_NP_exi_1: \<open>
+  (n,p) \<in> set (mergeNP np n1 n2) \<longrightarrow> 
+    (\<exists> (n',p') \<in> set np. (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2)\<close> 
+proof (induct np)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a np)
+  obtain n' p' where adef:\<open>a = (n',p')\<close> 
+    using prod.exhaust_sel by blast
+  show ?case 
+  proof
+    assume "(n, p) \<in> set (mergeNP (a # np) n1 n2)"
+    then have 
+      \<open>(n,p) \<in> set (mergeNP [a] n1 n2) \<or> (n,p) \<in> set (mergeNP np n1 n2)\<close>
+      using adef last_ConsL set_ConsD by fastforce
+    moreover have \<open>(n,p) \<in> set (mergeNP [a] n1 n2) \<Longrightarrow> 
+      (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2\<close> 
+      using adef by auto
+    moreover have \<open>(n', p') \<in> set (a # np)\<close> 
+      by (metis adef list.set_intros(1))
+    moreover have \<open>(n,p) \<in> set (mergeNP np n1 n2) \<Longrightarrow> \<exists>(n', p')\<in>set (a # np).
+      (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2\<close> 
+      by (metis (no_types, lifting) Cons.hyps exi_pop)
+    ultimately show "\<exists>(n', p')\<in>set (a # np).
+      (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2"
+      by blast
+  qed
+qed
+
+lemma merge_NP_exi_2: \<open>
+  (n',p') \<in> set np \<Longrightarrow> 
+    \<exists> (n,p) \<in> set (mergeNP np n1 n2). 
+      (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2\<close> 
+proof (induct np)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a np)
+  consider \<open>(n',p') = a\<close> | \<open>(n',p') \<in> set np\<close>  
+    by (metis Cons.prems set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      using list.set_intros(1) by fastforce
+  next
+    case 2
+    then have \<open>\<exists> (n, p) \<in> set (mergeNP np n1 n2).
+       (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2\<close> 
+      using Cons.hyps by auto
+    then obtain n p where 
+      \<open>(n, p) \<in> set (mergeNP np n1 n2) \<and> 
+        (if n' = n1 then n = n2 else n = n') \<and> p = mergeP p' n1 n2\<close> 
+      by blast
+    moreover have \<open>(n, p) \<in> set (mergeNP (a # np) n1 n2)\<close> 
+      by (metis calculation list.distinct(1) list.inject list.set_intros(2) mergeNP.elims)
+    ultimately show ?thesis 
+      by blast
+  qed
+qed
+(*\auxiliary*)
+
+(*truthiness*)
 definition prover where 
   \<open>prover p \<equiv> sv [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)]\<close>
 
@@ -3628,7 +3938,8 @@ definition \<open>sc W RE V G LA RA RN LP RP R Q P \<equiv>
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3691,12 +4002,6 @@ proof-
     using agrees_semantics fresh_new by fast
 qed
 
-lemma exi_pop: \<open>(\<exists> x' \<in> set (x # xs). P x') \<longleftrightarrow> ((\<exists> x' \<in> set xs. P x') \<or> P x)\<close> 
-  by (metis list.set_intros(1) list.set_intros(2) set_ConsD)
-
-lemma fa_pop: \<open>(\<forall> x' \<in> set (x # xs). P x') \<longleftrightarrow> ((\<forall> x' \<in> set xs. P x') \<and> P x)\<close> 
-  by (metis list.set_intros(1) list.set_intros(2) set_ConsD)
-
 lemma sc_pop_P:\<open>
   sc W RE V G LA RA RN LP RP R Q ((n,p) # P) \<longleftrightarrow> 
     sc W RE V G LA RA RN LP RP R Q P \<or> semantics W RE V G (G n) p\<close> (is \<open>?L1 \<longleftrightarrow> ?R1 \<or> ?R2\<close>)
@@ -3707,7 +4012,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set ((n,p) # P). semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3726,7 +4032,8 @@ qed
 
 lemma sc_pop_R:\<open>
   sc W RE V G LA RA RN LP RP ((n,ns,p) # R) Q P \<longleftrightarrow> 
-    sc W RE V G LA RA RN LP RP R Q P \<or> (\<exists> w' \<in> W. RE (G n) w' \<and> semantics W RE V G w' p)\<close> 
+    sc W RE V G LA RA RN LP RP R Q P \<or> 
+    (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set ns. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)\<close> 
 (is \<open>?L1 \<longleftrightarrow> ?R1 \<or> ?R2\<close>)
 proof-
   have \<open>?L1 \<longleftrightarrow> (
@@ -3735,7 +4042,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set ((n,ns,p) # R). (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set ((n,ns,p) # R). 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3744,7 +4052,8 @@ proof-
   then have \<open>?L1 \<longleftrightarrow> (?L2 \<longrightarrow> ?Q1 \<or> ?R3) \<or> ?EXR\<close>
     by meson
   moreover have \<open>
-    ?EXR = ((\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or> ?R2)\<close> 
+    ?EXR = ((\<exists> (n1,u,p) \<in> set R.
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or> ?R2)\<close> 
     (is \<open>?EXP = (?R4 \<or> ?R2)\<close>) 
     using exi_pop by (smt (verit) case_prod_conv) 
   moreover have \<open>?R1 = (?L2 \<longrightarrow> ?Q1 \<or> ?R4 \<or> ?R3)\<close> 
@@ -3764,7 +4073,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set ((n1,n2) # RP). RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3793,7 +4103,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set ((n1,n2) # RN). (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3822,7 +4133,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set ((n,a) # RA). V (G n) a)
@@ -3851,7 +4163,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3880,7 +4193,8 @@ proof-
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -3909,7 +4223,8 @@ proof-
     (\<forall> (n,a) \<in> set ((n,a) # LA). V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics W RE V G (G n) p) \<or>
-    (\<exists> (n1,u,p) \<in> set R. (\<exists> w' \<in> W. RE (G n1) w' \<and> semantics W RE V G w' p)) \<or>
+    (\<exists> (n1,u,p) \<in> set R. 
+      (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics W RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4045,16 +4360,193 @@ proof-
     by auto
 qed
 
-lemma merge_G_eq_merge: \<open>
+lemma merge_G_eq_semantics: \<open>G n1 = G n2 \<Longrightarrow> mergeP p' n1 n2 = p \<Longrightarrow> 
+  semantics W RE V G w p = semantics W RE V G w p'\<close>
+proof (induct p' arbitrary: p w)
+  case (Sat n p')
+  show ?case 
+    using Sat.hyps Sat.prems(1) Sat.prems(2) by force
+qed auto
+
+lemma merge_G_eq: \<open>
   G n1 = G n2 \<Longrightarrow> 
     sc W RE V G (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) (mergeNN LP n1 n2) 
         (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) [] \<Longrightarrow> 
-      sc W RE V G LA RA RN LP RP R Q []\<close> sorry
+      sc W RE V G LA RA RN LP RP R Q []\<close> (is \<open>?L1 \<Longrightarrow> ?L2 \<Longrightarrow> ?R\<close>) 
+proof-
+  assume l1:?L1
+  assume l2:?L2
+  have \<open>
+    (
+      (\<forall> (n,p) \<in> set Q. semantics W RE V G (G n) p) \<and> 
+      (\<forall> (n1,n2) \<in> set LP. RE (G n1) (G n2)) \<and>
+      (\<forall> (n,a) \<in> set LA. V (G n) a)
+    ) \<longrightarrow> (
+      (\<exists> (n,u,p) \<in> set R. 
+        (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)) \<or>
+      (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
+      (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
+      (\<exists> (n,a) \<in> set RA. V (G n) a)
+    )\<close>(is \<open>?RL \<longrightarrow> ?RR\<close>)
+  proof
+    assume 1:?RL
+    have 2:\<open>
+      (\<forall> (n,p) \<in> set (mergeNP Q n1 n2). semantics W RE V G (G n) p) \<and> 
+      (\<forall> (n1,n2) \<in> set (mergeNN LP n1 n2). RE (G n1) (G n2)) \<and>
+      (\<forall> (n,a) \<in> set (mergeNA LA n1 n2). V (G n) a)\<close> 
+      (is \<open>?mrg1 \<and> ?mrg2 \<and> ?mrg3\<close>)
+    proof-
+      have \<open>?mrg1\<close> 
+      proof 
+        fix n p
+        assume \<open>(n,p) \<in> set (mergeNP Q n1 n2)\<close>
+        then obtain n' p' where \<open>(n',p') \<in> set Q \<and> (if n' = n1 then n = n2 else n = n')  \<and>
+          mergeP p' n1 n2 = p\<close> 
+          using merge_NP_exi_1 by blast
+        moreover have \<open>semantics W RE V G (G n') p'\<close> 
+          using "1" calculation by fastforce
+        ultimately have \<open>semantics W RE V G (G n) p\<close> 
+          by (metis l1 merge_G_eq_semantics)
+        show ?thesis 
+      qed
+      moreover have \<open>?mrg2\<close>
+      proof 
+        fix na nb
+        assume \<open>(na,nb) \<in> set (mergeNN LP n1 n2)\<close>
+        (*show \<open>RE (G na) (G nb)\<close>*)
+        then obtain na' nb' where \<open>(na',nb') \<in> set LP \<and> (if na' = n1 then na = n2 else na = na') \<and>
+          (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+          using merge_NN_exi_1 by (smt (z3) case_prodE)
+        moreover have \<open>RE (G na') (G nb')\<close> 
+          using "1" calculation by fastforce
+        ultimately have \<open>RE (G na) (G nb)\<close> 
+          by (metis l1)
+        show ?thesis 
+      qed
+      moreover have \<open>?mrg3\<close>
+      proof 
+        fix n a
+        assume \<open>(n,a) \<in> set (mergeNA LA n1 n2)\<close>
+        then obtain n' a' where \<open>(n',a') \<in> set LA \<and> (if n' = n1 then n = n2 else n = n') \<and> a' = a\<close> 
+          using merge_NA_exi_1 by (smt (z3) case_prodE)
+        moreover have \<open>V (G n') a'\<close> 
+          using "1" calculation by fastforce
+        ultimately have \<open>V (G n) a\<close> 
+          by (metis l1)
+        show ?thesis 
+      qed
+      ultimately show ?thesis 
+        by simp
+    qed
+    then have \<open>
+      (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
+        (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)) \<or>
+      (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G n1) (G n2)) \<or>
+      (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G n1) = (G n2)) \<or>
+      (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G n) a)\<close> (is \<open>?mrg4 \<or> ?mrg5 \<or> ?mrg6 \<or> ?mrg7\<close>)
+      using l2 by (auto simp add: sc_def)
+    then consider "?mrg4" | "?mrg5" | "?mrg6" | "?mrg7" 
+      by blast
+    then show ?RR 
+    proof cases
+      case 1
+      then obtain n u p w where nup_def:
+        "(n,u,p) \<in> set (mergeNSNP R n1 n2) \<and> w \<in> W \<and>
+          (\<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)" 
+        by auto
+      then obtain n' u' p' where nup'_def:
+        \<open>(n',u',p') \<in> set R \<and> (if n' = n1 then n = n2 else n = n') \<and> mergeNS u' n1 n2 = u \<and>
+          mergeP p' n1 n2 = p\<close> 
+        using merge_NSNP_exi_1 by blast
+      then have G_eq:\<open>G n' = G n\<close>
+        using l1 by metis
+      moreover have \<open>\<not>(\<exists> n' \<in> set u'. G n' = w)\<close> 
+        by (metis (mono_tags, hide_lams) l1 merge_NS_exi_2 nup'_def nup_def)
+      moreover have \<open>semantics W RE V G w p = semantics W RE V G w p'\<close> 
+        by (metis l1 merge_G_eq_semantics nup'_def)
+      ultimately have \<open>\<not>(\<exists> n' \<in> set u'. G n' = w) \<and> RE (G n') w \<and> semantics W RE V G w p'\<close> 
+        using nup_def by auto
+      then show ?thesis
+        using nup'_def nup_def old.prod.case by blast
+    next
+      case 2
+      then obtain na nb where nn_def:
+        "(na,nb) \<in> set (mergeNN RP n1 n2) \<and> (RE (G na) (G nb))" 
+        by auto
+      then obtain na' nb' where nn'_def:
+        \<open>(na',nb') \<in> set RP \<and> (if na' = n1 then na = n2 else na = na') \<and>
+          (if nb' = n1 then nb = n2 else nb = nb')\<close> 
+        using merge_NN_exi_1 by (smt (z3) case_prodE)
+      then have G_eq:\<open>G na' = G na \<and> G nb' = G nb\<close>
+        using l1 by metis
+      then show ?thesis
+        using nn'_def nn_def by fastforce
+    next
+      case 3
+      then show ?thesis 
+        by (smt (z3) case_prodD case_prodE case_prodI2 l1 merge_NN_exi_1)
+    next
+      case 4
+      then show ?thesis
+        by (smt (z3) case_prodE case_prod_conv l1 merge_NA_exi_1)
+    qed
+  qed
+  then show ?R 
+    by (simp add: sc_def)
+qed
 
 lemma agrees_merge: \<open>
   G' = agrees G n1 w' \<Longrightarrow> sc W RE V G' LA RA RN LP RP R Q [] \<Longrightarrow>
     sc W RE V G (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) (mergeNN LP n1 n2) 
-        (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) []\<close> sorry
+        (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) []\<close> (is \<open>?L1 \<Longrightarrow> ?L2 \<Longrightarrow> ?R1\<close>)
+proof-
+  assume l1:?L1
+  assume l2:?L2
+  have \<open>?R1 = 
+      ((\<forall> (n,p) \<in> set (mergeNP Q n1 n2). semantics W RE V G (G n) p) \<and> 
+      (\<forall> (n1,n2) \<in> set (mergeNN LP n1 n2). RE (G n1) (G n2)) \<and>
+      (\<forall> (n,a) \<in> set (mergeNA LA n1 n2). V (G n) a) \<longrightarrow>
+      (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
+        (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics W RE V G w p)) \<or>
+      (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G n1) (G n2)) \<or>
+      (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G n1) = (G n2)) \<or>
+      (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G n) a))\<close> (is \<open>?R1 = (?L3 \<longrightarrow> ?R2)\<close>) 
+    by (simp add: sc_def)
+  moreover have \<open>?L3 \<Longrightarrow> ?R2\<close>
+  proof-
+    assume l3:?L3
+    then have \<open>
+      (\<forall> (n,p) \<in> set Q. semantics W RE V G' (G' n) p) \<and> 
+      (\<forall> (n1,n2) \<in> set LP. RE (G' n1) (G' n2)) \<and>
+      (\<forall> (n,a) \<in> set LA. V (G' n) a)\<close> (is \<open>?Q \<and> ?LP \<and> ?LA\<close>) sorry
+    then have \<open>
+      (\<exists> (n,u,p) \<in> set R. 
+        (\<exists> w \<in> W. \<not>(\<exists> n' \<in> set u. G' n' = w) \<and> RE (G' n) w \<and> semantics W RE V G' w p)) \<or>
+      (\<exists> (n1,n2) \<in> set RP. RE (G' n1) (G' n2)) \<or>
+      (\<exists> (n1,n2) \<in> set RN. (G' n1) = (G' n2)) \<or>
+      (\<exists> (n,a) \<in> set RA. V (G' n) a)\<close> (is \<open>?R \<or> ?RP \<or> ?RN \<or> ?RA\<close>) 
+      using l2 by (auto simp add: sc_def)
+    then consider ?R | ?RP | ?RN | ?RA 
+      by blast
+    then show ?R2 
+    proof cases
+      case 1
+      then show ?thesis sorry
+    next
+      case 2
+      then show ?thesis sorry
+    next
+      case 3
+      then show ?thesis sorry
+    next
+      case 4
+      then show ?thesis sorry
+    qed
+  qed
+  ultimately show ?R1 
+    by simp
+qed
+
 
 lemma Q_Nom: \<open>
   (\<forall> (W :: 'a set) RE V G. sc W RE V G LA RA RN LP RP R ((n1, NOM n2) # Q) []) \<longleftrightarrow> 
@@ -4070,7 +4562,7 @@ proof-
   have ldef:\<open>?L \<longleftrightarrow> (\<forall> (W :: 'a set) RE V G. G n1 = G n2 \<longrightarrow> ?cre W RE V G)\<close> 
       using sc_pop_Q by (metis semantics.simps(2))
   moreover have \<open>\<forall> (W :: 'a set) RE V G. (G n1 = G n2 \<longrightarrow> ?mrg W RE V G \<longrightarrow> ?cre W RE V G)\<close> 
-    by (meson merge_G_eq_merge)
+    by (meson merge_G_eq)
   ultimately have "?R \<longrightarrow> ?L" 
     by blast
   moreover have \<open>?L \<longrightarrow> ?R\<close>
@@ -4148,7 +4640,8 @@ lemma semantic_exi_iff_fresh: \<open>
   (\<forall> (W :: 'a set) RE V G. (\<exists>v \<in> W. (RE (G n) v) \<and> (semantics W RE V G v p))
     \<longrightarrow> sc W RE V G LA RA RN LP RP R Q []) \<longleftrightarrow> 
   (\<forall> (W :: 'a set) RE V G. RE (G n) (G x) \<and> semantics W RE V G (G x) p
-    \<longrightarrow> sc W RE V G LA RA RN LP RP R Q [])\<close> 
+    \<longrightarrow> sc W RE V G LA RA RN LP RP R Q [])\<close> sorry
+(*
 proof (induct p)
   case (Pro x)
   let ?x = \<open>fresh (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close>
@@ -4173,7 +4666,7 @@ next
   case (Pos p')
   let ?x = \<open>fresh (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close>
   show ?case sorry
-qed 
+qed *)
 
 
 lemma Q_Pos: \<open>
