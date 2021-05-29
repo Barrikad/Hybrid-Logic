@@ -3916,6 +3916,79 @@ next
       by blast
   qed
 qed
+
+lemma nomNP_member: \<open>(n,p) \<in> set np \<Longrightarrow> 
+  member n (nominalsNP np) \<and> sub_set (nominalsForm p) (nominalsNP np)\<close> 
+proof (induct np)
+  case Nil
+then show ?case by simp
+next
+  case (Cons a np)
+  then obtain n' p' where adef:\<open>a = (n',p')\<close> 
+    by (metis surj_pair)
+  consider \<open>n = n' \<and> p = p'\<close> | \<open>(n,p) \<in> set np\<close> 
+    by (metis Cons.prems adef prod.inject set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      by (metis ListSet.member.simps(2) add_def add_sub_set adef nominalsNP.simps(2) sub_set_union1)
+  next
+    case 2
+    then have 3:\<open>member n (nominalsNP np) \<and> sub_set (nominalsForm p) (nominalsNP np)\<close> 
+      using Cons.hyps by blast
+    then have \<open>member n (nominalsNP (a # np))\<close> 
+      by (smt (verit, ccfv_threshold) ListSet.member.simps(2) add_def list.discI list.inject 
+          nominalsNP.elims union_member)
+    moreover have \<open>sub_set (nominalsForm p) (nominalsNP (a # np))\<close>
+      using 3 by (metis add_sub_set adef member_sub_set nominalsNP.simps(2) sub_set_union2)
+    ultimately show ?thesis by simp
+  qed
+qed
+
+lemma nomNN_member: \<open>(n1,n2) \<in> set nn \<Longrightarrow> member n1 (nominalsNN nn) \<and> member n2 (nominalsNN nn)\<close>
+  apply (induct nn)
+   apply simp
+  using ListSet.member.simps(2) set_ConsD by fastforce
+
+lemma nomNA_member: \<open>(n,a) \<in> set na \<Longrightarrow> member n (nominalsNA na)\<close>
+  apply (induct na)
+   apply simp
+  using ListSet.member.simps(2) set_ConsD by fastforce
+
+lemma nomNSNP_member: \<open>
+  (n,ns,p) \<in> set nsnp \<Longrightarrow> member n (nominalsNSNP nsnp) \<and> sub_set ns (nominalsNSNP nsnp) \<and> 
+      sub_set (nominalsForm p) (nominalsNSNP nsnp)\<close>
+proof (induct nsnp)
+  case Nil
+  then show ?case by simp
+next
+  case (Cons a nsnp)
+  then obtain n' ns' p' where adef:\<open>a = (n',ns',p')\<close> 
+    by (metis surj_pair)
+  consider \<open>n = n' \<and> ns = ns' \<and> p = p'\<close> | \<open>(n,ns,p) \<in> set nsnp\<close> 
+    by (metis Cons.prems adef prod.inject set_ConsD)
+  then show ?case 
+  proof cases
+    case 1
+    then show ?thesis 
+      by (smt (verit, ccfv_SIG) ListSet.member.simps(2) add_def adef member_sub_set 
+          nominalsNSNP.simps(2) sub_set_union1 sub_set_union2)
+  next
+    case 2
+    then have 3:\<open>member n (nominalsNSNP nsnp)\<and> sub_set ns (nominalsNSNP nsnp) \<and> 
+      sub_set (nominalsForm p) (nominalsNSNP nsnp)\<close> 
+      using Cons.hyps by blast
+    then have \<open>member n (nominalsNSNP (a # nsnp))\<close> 
+      by (smt (verit, ccfv_threshold) ListSet.member.simps(2) add_def list.discI list.inject 
+          nominalsNSNP.elims union_member)
+    moreover have \<open>sub_set ns (nominalsNSNP (a # nsnp))\<close>
+      using "3" adef union_member by fastforce
+    moreover have \<open>sub_set (nominalsForm p) (nominalsNSNP (a # nsnp))\<close> 
+      using "3" adef union_member by fastforce
+    ultimately show ?thesis by simp
+  qed
+qed
 (*\auxiliary*)
 
 (*truthiness*)
@@ -4894,6 +4967,153 @@ proof-
     by auto
 qed
 
+lemma semantics_fresh_agree: \<open>sub_set (nominalsForm p) ns \<Longrightarrow> 
+  G' = agrees G (fresh ns) w \<Longrightarrow> semantics RE V G w p \<Longrightarrow> semantics RE V G' w p\<close> 
+by (induct p) (metis agrees_semantics fresh_new member_sub_set)+
+
+lemma sc_fresh_agree: \<open>
+  G' = agrees G (fresh (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))) w \<Longrightarrow>
+  sc RE V G' LA RA RN LP RP R Q [] \<Longrightarrow> sc RE V G LA RA RN LP RP R Q []\<close> (is \<open>?L1 \<Longrightarrow> ?L2 \<Longrightarrow> ?R1\<close>)
+proof-
+  let ?x = \<open>fresh (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close>
+  assume l1:?L1
+  assume l2:?L2
+  have \<open>(
+      (\<forall> (n,p) \<in> set Q. semantics RE V G (G n) p) \<and> 
+      (\<forall> (n1,n2) \<in> set LP. RE (G n1) (G n2)) \<and>
+      (\<forall> (n,a) \<in> set LA. V (G n) a)
+    ) \<Longrightarrow> (
+      (\<exists> (n,u,p) \<in> set R. 
+        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
+      (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
+      (\<exists> (n,a) \<in> set RA. V (G n) a)
+    )\<close> (is \<open>?L3 \<Longrightarrow> ?R2\<close>)
+  proof-
+    assume l3:?L3
+    have \<open>(
+        (\<forall> (n,p) \<in> set Q. semantics RE V G' (G' n) p) \<and> 
+        (\<forall> (n1,n2) \<in> set LP. RE (G' n1) (G' n2)) \<and>
+        (\<forall> (n,a) \<in> set LA. V (G' n) a)
+      )\<close> (is \<open>?Q \<and> ?LP \<and> ?LA\<close>)
+    proof-
+      have ?Q 
+      proof safe
+        fix n' p'
+        assume Q_def: \<open>(n',p') \<in> set Q\<close>
+        have G_eq: \<open>G n' = G' n'\<close> 
+        proof-
+          have \<open>member n' (nominalsNP Q)\<close> 
+            using Q_def nomNP_member by auto
+          then have \<open>member n' (nominalsNP ((n, \<diamond> p) # Q))\<close> 
+            by (meson Q_def list.set_intros(2) nomNP_member)
+          then have \<open>member n' (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+            by (metis union_member)
+          then show ?thesis 
+            by (smt (z3) agrees_def fresh_new l1)
+        qed
+        have p_sub: \<open>sub_set (nominalsForm p') (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        proof-
+          have \<open>sub_set (nominalsForm p') (nominalsNP Q)\<close>
+            using Q_def nomNP_member by auto
+          then have \<open>sub_set (nominalsForm p') (nominalsNP ((n, \<diamond> p) # Q))\<close> 
+            by (meson Q_def list.set_intros(2) nomNP_member)
+          then show ?thesis 
+            by (metis (no_types, lifting) member_sub_set union_member)
+        qed
+        from Q_def have "semantics RE V G (G n') p'" 
+          using l3 by fastforce
+        then show \<open>semantics RE V G' (G' n') p'\<close> 
+          using G_eq p_sub by (metis (full_types) agrees_semantics fresh_new l1 member_sub_set)
+      qed
+      moreover have ?LP 
+        by (smt (z3) agrees_def case_prodD case_prodI2 fresh_new l1 l3 member_sub_set 
+            nomNN_member sub_set_union1 sub_set_union2)
+      moreover have ?LA 
+        by (smt (z3) agrees_def case_prodD case_prodI2 fresh_new l1 l3 member_sub_set 
+            nomNA_member sub_set_union1)
+      ultimately show ?thesis
+        by simp
+    qed
+    then have \<open>(
+        (\<exists> (n,u,p) \<in> set R. 
+          (\<exists> w. \<not>(\<exists> n' \<in> set u. G' n' = w) \<and> RE (G' n) w \<and> semantics RE V G' w p)) \<or>
+        (\<exists> (n1,n2) \<in> set RP. RE (G' n1) (G' n2)) \<or>
+        (\<exists> (n1,n2) \<in> set RN. (G' n1) = (G' n2)) \<or>
+        (\<exists> (n,a) \<in> set RA. V (G' n) a)
+      )\<close> (is \<open>?R \<or> ?RP \<or> ?RN \<or> ?RA\<close>)
+      using l2 by (auto simp add: sc_def)
+    then consider ?R | ?RP | ?RN | ?RA
+      by blast
+    then show ?R2 
+    proof cases
+      case 1
+      then obtain n' u' p' w' where nup_def':
+        \<open>(n',u',p') \<in> set R \<and> \<not>(\<exists> n' \<in> set u'. G' n' = w') \<and> RE (G' n') w' \<and> 
+          semantics RE V G' w' p'\<close> 
+        by auto
+      have \<open>\<not>(\<exists> n \<in> set u'. G n = w') \<and> RE (G n') w' \<and> semantics RE V G w' p'\<close>  
+      proof-
+        have ndef: \<open>member n' (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+          by (meson member_sub_set nomNSNP_member nup_def' sub_set_union1 sub_set_union2)
+        have udef: \<open>sub_set u' (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+          by (metis (no_types, lifting) member_sub_set nomNSNP_member nup_def' union_member)
+        have pdef: \<open>sub_set (nominalsForm p') (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close>
+          by (metis (no_types, lifting) member_sub_set nomNSNP_member nup_def' union_member)
+        have \<open>\<forall> n' \<in> set u'. G n' \<noteq> w'\<close> 
+        proof 
+          fix m
+          assume mdef:\<open>m \<in> set u'\<close> 
+          then have \<open>member m (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+            using udef by blast
+          then show \<open>G m \<noteq> w'\<close> 
+            by (metis mdef agrees_def fresh_new l1 nup_def')
+        qed
+        moreover have \<open>RE (G n') w'\<close> 
+          using ndef by (smt (verit, best) agrees_def fresh_new l1 nup_def')
+        moreover have \<open>semantics RE V G w' p'\<close> 
+          using pdef by (metis (no_types, lifting) agrees_semantics 
+              fresh_new l1 member_sub_set nup_def')
+        ultimately show ?thesis 
+          by simp
+      qed
+      then show ?thesis 
+        using nup_def' by fastforce
+    next
+      case 2
+      obtain n1 n2 where n1n2_def:\<open>(n1,n2) \<in> set RP \<and> RE (G' n1) (G' n2)\<close> 
+        using "2" by auto
+      moreover have \<open>member n1 (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis n1n2_def nomNN_member union_member)
+      moreover have \<open>member n2 (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis n1n2_def nomNN_member union_member)
+      ultimately show ?thesis 
+        by (smt (z3) agrees_def case_prodI fresh_new l1)
+    next
+      case 3
+      obtain n1 n2 where n1n2_def:\<open>(n1,n2) \<in> set RN \<and> (G' n1) = (G' n2)\<close> 
+        using "3" by auto
+      moreover have \<open>member n1 (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis n1n2_def nomNN_member union_member)
+      moreover have \<open>member n2 (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis n1n2_def nomNN_member union_member)
+      ultimately show ?thesis 
+        by (smt (z3) agrees_def case_prodI fresh_new l1)
+    next
+      case 4
+      obtain n' a' where n1n2_def:\<open>(n',a') \<in> set RA \<and> V (G' n') a'\<close> 
+        using "4" by auto
+      moreover have \<open>member n' (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis n1n2_def nomNA_member union_member)
+      ultimately show ?thesis 
+        by (smt (z3) agrees_def case_prodI fresh_new l1)
+    qed
+  qed
+
+  then show ?R1 
+    by (simp add: sc_def)
+qed
+
 lemma semantic_exi_iff_fresh: \<open>
   let x = fresh (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q)) in 
   (\<forall> (RE :: 'a \<Rightarrow> 'a \<Rightarrow> bool) V G. (\<exists> v. (RE (G n) v) \<and> (semantics RE V G v p))
@@ -4924,9 +5144,22 @@ proof-
     proof (safe)
       fix RE :: \<open>'a \<Rightarrow> 'a \<Rightarrow> bool\<close>
       fix V G w
-      assume \<open>RE (G n) w\<close>
-      assume \<open>semantics RE V G w p\<close>
-      show \<open>sc RE V G LA RA RN LP RP R Q []\<close> sorry
+      assume a1:\<open>RE (G n) w\<close>
+      assume a2:\<open>semantics RE V G w p\<close>
+      have sub:\<open>sub_set (nominalsForm p) (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
+        by (metis (no_types, lifting) list.set_intros(1) member_sub_set nomNP_member 
+            nominalsForm.simps(6) union_member)
+      obtain G' where G_def': \<open>G' = agrees G ?x w\<close> 
+        by simp
+      then have \<open>RE (G' n) (G' ?x)\<close>
+        using a1 by (smt (z3) ListSet.member.simps(2) add_def agrees_def fresh_new 
+            member_sub_set nominalsNP.simps(2) sub_set_union2)
+      moreover have \<open>semantics RE V G' (G' ?x) p\<close> 
+        by (metis G_def' a2 agrees_def semantics_fresh_agree sub)
+      ultimately have \<open>sc RE V G' LA RA RN LP RP R Q []\<close> 
+        using r by simp
+      then show \<open>sc RE V G LA RA RN LP RP R Q []\<close> 
+        by (metis G_def' sc_fresh_agree)
     qed
   qed
   then show ?thesis 
