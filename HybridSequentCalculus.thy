@@ -5559,8 +5559,7 @@ proof-
 qed
 
 
-theorem soundness: \<open>
-  (\<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A)) \<Longrightarrow>
+theorem soundness': \<open>
   sv LA RA RN LP RP R Q P \<Longrightarrow>
   (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R Q P)\<close>
 proof (induct LA RA RN LP RP R Q P rule: sv.induct)
@@ -5616,8 +5615,6 @@ next
   let ?sat = \<open>
     saturate R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R)\<close>
-  have axi: \<open>(\<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A))\<close> 
-    by (simp add: "13.prems")
 
   consider (none)\<open>?sat = None\<close> | (some)\<open>\<exists> n m p R' R''. ?sat = Some (n,m,p,R',R'')\<close> 
     by (metis option.exhaust prod_cases5)
@@ -5627,10 +5624,10 @@ next
     then have \<open>(\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. 
       common LA RA \<or> common LP RP \<or> reflect RN \<longrightarrow>
       sc RE V G LA RA RN LP RP R [] [])\<close> 
-      using axi by (simp add: R_none)
+      by (simp add: R_none)
     moreover have \<open>sv LA RA RN LP RP R [] [] \<longrightarrow> common LA RA \<or> common LP RP \<or> reflect RN\<close> 
       using none by simp
-    ultimately show ?thesis using "13.prems"(2) by meson
+    ultimately show ?thesis using 13 by meson
   next
     case some
     then obtain n m p R' R'' where sat_def:\<open>?sat = Some (n,m,p,R',R'')\<close> by auto
@@ -5639,7 +5636,7 @@ next
         (\<forall>  RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R' [] [(m,p)]) \<or>
       (\<forall>  RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R'' [] []) \<longrightarrow>
       sc RE V G LA RA RN LP RP R [] [])\<close> 
-      using axi R_some by metis
+      using R_some by metis
     moreover have \<open>
       sv LA RA RN LP RP R [] [] \<longleftrightarrow>
         (sv LA RA RN LP ((n,m) # RP) R' [] [] \<and> 
@@ -5647,8 +5644,22 @@ next
         sv LA RA RN LP RP R'' [] []\<close>
       using sat_def by simp
     ultimately show ?thesis 
-      using "13.hyps" sat_def axi by (metis "13.prems"(2))
+      using 13 sat_def by (metis)
   qed
+qed
+
+corollary soundness:\<open>prover p \<Longrightarrow> (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G w. semantics RE V G w p)\<close> 
+proof (intro allI)
+  fix V :: "'a \<Rightarrow> 'b \<Rightarrow> bool"
+  fix RE G w
+  assume \<open>prover p\<close>
+  then have \<open>sv [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)]\<close>
+    using prover_def by auto
+  then have \<open>
+    (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)])\<close> 
+    by (meson Q_Neg sc_pop_Q sc_semantics_iff semantics.simps(3) soundness')
+  then show \<open>semantics RE V G w p\<close> 
+    using sc_semantics_iff by fastforce
 qed
 (*/soundness*)
 
