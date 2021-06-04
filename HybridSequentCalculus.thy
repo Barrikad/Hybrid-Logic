@@ -4016,8 +4016,7 @@ definition \<open>sc RE V G LA RA RN LP RP R Q P \<equiv>
     (\<forall> (n,a) \<in> set LA. V (G n) a)
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
-    (\<exists> (n,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+    (\<exists> (n,ns,p) \<in> set R. (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4091,7 +4090,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set ((n,p) # P). semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4110,8 +4109,8 @@ qed
 
 lemma sc_pop_R:\<open>
   sc RE V G LA RA RN LP RP ((n,ns,p) # R) Q P \<longleftrightarrow> 
-    sc RE V G LA RA RN LP RP R Q P \<or> 
-    (\<exists> w. \<not>(\<exists> n' \<in> set ns. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)\<close> 
+    sc RE V G LA RA RN LP RP R Q P \<or> (
+      (\<exists> w. RE (G n) w \<and> semantics RE V G w p))\<close> 
 (is \<open>?L1 \<longleftrightarrow> ?R1 \<or> ?R2\<close>)
 proof-
   have \<open>?L1 \<longleftrightarrow> (
@@ -4121,7 +4120,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set ((n,ns,p) # R). 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4131,7 +4130,7 @@ proof-
     by meson
   moreover have \<open>
     ?EXR = ((\<exists> (n1,u,p) \<in> set R.
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or> ?R2)\<close> 
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or> ?R2)\<close> 
     (is \<open>?EXP = (?R4 \<or> ?R2)\<close>) 
     using exi_pop by (smt (verit) case_prod_conv) 
   moreover have \<open>?R1 = (?L2 \<longrightarrow> ?Q1 \<or> ?R4 \<or> ?R3)\<close> 
@@ -4152,7 +4151,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set ((n1,n2) # RP). RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4182,7 +4181,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set ((n1,n2) # RN). (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4212,7 +4211,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set ((n,a) # RA). V (G n) a)
@@ -4242,7 +4241,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4272,7 +4271,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4302,7 +4301,7 @@ proof-
   ) \<longrightarrow> (
     (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
     (\<exists> (n1,u,p) \<in> set R. 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n1) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n1) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4319,9 +4318,15 @@ proof-
   ultimately show ?thesis 
     by meson 
 qed
+
+definition consistent where \<open>
+  consistent LA RA RN LP RP R Q P (T :: 'a itself) \<equiv> 
+    (\<forall> (n,ns,p) \<in> set R. \<forall> m \<in> set ns. \<not>(
+      \<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n,m) # RP) R Q ((m,p) # P)))\<close>
 (*/truth-definitions*)
 
 (*soundness*)
+
 lemma P_Pro:
   \<open>sc RE V G LA RA RN LP RP R Q ((n, PRO a) # P) \<longleftrightarrow> sc RE V G LA ((n, a) # RA) RN LP RP R Q P\<close>
 proof-
@@ -4335,6 +4340,19 @@ proof-
     by (simp add: sc_pop_RA)
   ultimately show ?thesis 
     by simp
+qed
+
+lemma P_Pro_cons: \<open>
+  consistent LA RA RN LP RP R Q ((n, PRO a) # P) (T :: 'a itself) \<Longrightarrow>
+  consistent LA ((n, a) # RA) RN LP RP R Q P T\<close> (is \<open>?L \<Longrightarrow> ?R\<close>)
+proof-
+  assume l: ?L
+  have \<open>\<forall> n' m p RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G.
+    (sc RE V G LA RA RN LP ((n', m) # RP) R Q ((m, p) # (n, PRO a) # P)) \<longleftrightarrow>
+    (sc RE V G LA ((n, a) # RA) RN LP ((n', m) # RP) R Q ((m, p) # P))\<close> 
+    by (meson P_Pro sc_pop_P)
+  then show ?R 
+    by (smt (z3) case_prodD case_prodI2 l consistent_def)
 qed
 
 lemma P_Nom: \<open>
@@ -4353,6 +4371,19 @@ proof-
     by auto 
 qed
 
+lemma P_Nom_cons: \<open>
+  consistent LA RA RN LP RP R Q ((na, NOM nb) # P) (T :: 'a itself) \<Longrightarrow>
+  consistent LA RA ((na, nb) # RN) LP RP R Q P T\<close> (is \<open>?L \<Longrightarrow> ?R\<close>)
+proof-
+  assume l: ?L
+  have \<open>\<forall> n' m p RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G.
+    (sc RE V G LA RA RN LP ((n', m) # RP) R Q ((m, p) # (na, NOM nb) # P)) \<longleftrightarrow>
+    (sc RE V G LA RA ((na, nb) # RN) LP ((n', m) # RP) R Q ((m, p) # P))\<close> 
+    by (meson P_Nom sc_pop_P)
+  then show ?R 
+    by (smt (z3) case_prodD case_prodI2 l consistent_def)
+qed
+
 lemma P_Neg: \<open>
   sc RE V G LA RA RN LP RP R Q ((n, NOT p) # P) \<longleftrightarrow> 
     sc RE V G LA RA RN LP RP R ((n,p) # Q) P\<close>
@@ -4367,6 +4398,19 @@ proof-
     by (simp add: sc_pop_Q)
   ultimately show ?thesis 
     by auto 
+qed
+
+lemma P_Neg_cons: \<open>
+  consistent LA RA RN LP RP R Q ((n, NOT p) # P) (T :: 'a itself) \<Longrightarrow>
+  consistent LA RA RN LP RP R ((n,p) # Q) P T\<close> (is \<open>?L \<Longrightarrow> ?R\<close>)
+proof-
+  assume l: ?L
+  have \<open>\<forall> n' m p RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G.
+    (sc RE V G LA RA RN LP ((n', m) # RP) R Q ((m, p) # ((n, NOT p) # P))) \<longleftrightarrow>
+    (sc RE V G LA RA RN LP ((n', m) # RP) R ((n,p) # Q) ((m, p) # P))\<close> 
+    by (meson P_Neg sc_pop_P)
+  then show ?R 
+    by (smt (z3) P_Neg case_prodD case_prodI2 l sc_pop_P consistent_def)
 qed
 
 lemma P_Con: \<open>
@@ -4389,6 +4433,46 @@ proof-
   ultimately show ?thesis 
     by auto 
 qed
+(*
+lemma P_Con_cons: \<open>
+  (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R Q ((n, p1 AND p2) # P)) \<Longrightarrow>
+  consistent LA RA RN LP RP R Q ((n, p1 AND p2) # P) (T :: 'a itself) \<Longrightarrow>
+  consistent LA RA RN LP RP R Q ((n, p1) # P) T \<and>
+  consistent LA RA RN LP RP R Q ((n, p2) # P) T\<close> (is \<open>?L1 \<Longrightarrow> ?L2 \<Longrightarrow> ?R\<close>) 
+proof-
+  assume l1: ?L1
+  assume l2: ?L2
+  have \<open>consistent LA RA RN LP RP R Q ((n, p1) # P) T\<close>
+  proof (rule ccontr)
+    assume a1:\<open>\<not>consistent LA RA RN LP RP R Q ((n, p1) # P) T\<close>
+    then obtain n' ns p m where 
+      \<open>(n',ns,p) \<in> set R \<and> m \<in> set ns \<and> 
+      (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. 
+        sc RE V G LA RA RN LP ((n',m) # RP) R Q ((m,p) # (n, p1) # P))\<close> 
+      using consistent_def by blast
+
+  have 1:\<open>\<forall> n' m p RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G.
+    sc RE V G LA RA RN LP ((n', m) # RP) R Q ((m, p) # (n, p1 AND p2) # P) \<longleftrightarrow>
+    sc RE V G LA RA RN LP ((n', m) # RP) R Q ((n,p1) # (m, p) # P) \<and>
+    sc RE V G LA RA RN LP ((n', m) # RP) R Q ((n,p2) # (m, p) # P)\<close> 
+    by (smt (z3) P_Con sc_pop_P)
+  have \<open>
+    (\<forall> (n',ns,p) \<in> set R. \<forall> m \<in> set ns. \<not>(
+    \<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n',m) # RP) R Q ((m,p) # (n, p1) # P)))\<close> 
+  proof (safe)
+    fix n' ns p m
+    assume \<open>(n',ns,p) \<in> set R\<close>
+    assume \<open>m \<in> set ns\<close>
+    assume \<open>\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. 
+      sc RE V G LA RA RN LP ((n',m) # RP) R Q ((m,p) # (n, p1) # P)\<close>
+    show False sorry
+  qed
+  moreover have \<open>
+    (\<forall> (n',ns,p) \<in> set R. \<forall> m \<in> set ns. \<not>(
+    \<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n',m) # RP) R Q ((m,p) # (n, p2) # P)))\<close> sorry
+  ultimately show ?R 
+    by (simp add: consistent_def)
+qed*)
 
 lemma P_Sat: \<open>
   sc RE V G LA RA RN LP RP R Q ((n1, AT n2 p) # P) \<longleftrightarrow> 
@@ -4461,7 +4545,7 @@ proof-
       (\<forall> (n,a) \<in> set LA. V (G n) a)
     ) \<longrightarrow> (
       (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -4514,7 +4598,7 @@ proof-
     qed
     then have \<open>
       (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G n) a)\<close> (is \<open>?mrg4 \<or> ?mrg5 \<or> ?mrg6 \<or> ?mrg7\<close>)
@@ -4525,8 +4609,7 @@ proof-
     proof cases
       case 1
       then obtain n u p w where nup_def:
-        "(n,u,p) \<in> set (mergeNSNP R n1 n2) \<and>
-          (\<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)" 
+        "(n,u,p) \<in> set (mergeNSNP R n1 n2) \<and> (RE (G n) w \<and> semantics RE V G w p)" 
         by auto
       then obtain n' u' p' where nup'_def:
         \<open>(n',u',p') \<in> set R \<and> (if n' = n1 then n = n2 else n = n') \<and> mergeNS u' n1 n2 = u \<and>
@@ -4534,11 +4617,10 @@ proof-
         using merge_NSNP_exi_1 by blast
       then have G_eq:\<open>G n' = G n\<close>
         using l1 by metis
-      moreover have \<open>\<not>(\<exists> n' \<in> set u'. G n' = w)\<close> 
-        by (metis (mono_tags, hide_lams) l1 merge_NS_exi_2 nup'_def nup_def)
       moreover have \<open>semantics RE V G w p = semantics RE V G w p'\<close> 
         by (metis l1 merge_G_eq_semantics_1 nup'_def)
-      ultimately have \<open>\<not>(\<exists> n' \<in> set u'. G n' = w) \<and> RE (G n') w \<and> semantics RE V G w p'\<close> 
+      ultimately have \<open>
+        RE (G n') w \<and> semantics RE V G w p'\<close> 
         using nup_def by auto
       then show ?thesis
         using nup'_def nup_def old.prod.case by blast
@@ -4581,7 +4663,7 @@ proof-
     (\<forall> (n1,n2) \<in> set (mergeNN LP n1 n2). RE (G n1) (G n2)) \<and>
     (\<forall> (n,a) \<in> set (mergeNA LA n1 n2). V (G n) a) \<Longrightarrow>
     (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G n) a)\<close> (is "?L3 \<Longrightarrow> ?R2")
@@ -4631,7 +4713,7 @@ proof-
     qed
     then have \<open>
       (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> (is \<open>?R \<or> ?RP \<or> ?RN \<or> ?RA\<close>)
@@ -4642,8 +4724,7 @@ proof-
     proof cases
       case 1
       then obtain n' u' p' w where nup_def:
-        \<open>(n',u',p') \<in> set R \<and> \<not>(\<exists> n' \<in> set u'. G n' = w) \<and> RE (G n') w \<and> 
-          semantics RE V G w p'\<close> 
+        \<open>(n',u',p') \<in> set R \<and> RE (G n') w \<and> semantics RE V G w p'\<close> 
         by auto
       then obtain n u p where nup'_def: \<open>
         (n,u,p) \<in> set (mergeNSNP R n1 n2) \<and> (if n' = n1 then n = n2 else n = n') \<and> 
@@ -4651,14 +4732,12 @@ proof-
         using merge_NSNP_exi_2 by blast
       then have G_eq:\<open>G n' = G n\<close>
         using l1 by metis
-      moreover have \<open>\<not>(\<exists> n' \<in> set u. G n' = w)\<close>
-        using l1 nup'_def nup_def by auto
       moreover have \<open>semantics RE V G w p = semantics RE V G w p'\<close> 
         by (metis l1 merge_G_eq_semantics_1 nup'_def)
-      ultimately have \<open>\<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p\<close> 
+      ultimately have \<open>RE (G n) w \<and> semantics RE V G w p\<close> 
         using nup_def by auto
       then show ?thesis 
-        using nup_def nup'_def old.prod.case by blast
+        using nup_def nup'_def old.prod.case by fastforce
     next
       case 2
       then obtain na nb where nanb_def: \<open>(na,nb) \<in> set RP \<and> RE (G na) (G nb)\<close>
@@ -4718,7 +4797,7 @@ proof-
     (\<forall> (n1,n2) \<in> set (mergeNN LP n1 n2). RE (G n1) (G n2)) \<and>
     (\<forall> (n,a) \<in> set (mergeNA LA n1 n2). V (G n) a) \<Longrightarrow>
     (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
-      (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
     (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G n1) (G n2)) \<or>
     (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G n1) = (G n2)) \<or>
     (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G n) a)\<close> (is "?L3 \<Longrightarrow> ?R2")
@@ -4805,7 +4884,7 @@ proof-
     qed
     then have \<open>
       (\<exists> (n,u,p) \<in> set (mergeNSNP R n1 n2). 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G' n' = w) \<and> RE (G' n) w \<and> semantics RE V G' w p)) \<or>
+        (\<exists> w. RE (G' n) w \<and> semantics RE V G' w p)) \<or>
       (\<exists> (n1,n2) \<in> set (mergeNN RP n1 n2). RE (G' n1) (G' n2)) \<or>
       (\<exists> (n1,n2) \<in> set (mergeNN RN n1 n2). (G' n1) = (G' n2)) \<or>
       (\<exists> (n,a) \<in> set (mergeNA RA n1 n2). V (G' n) a)\<close> (is \<open>?R \<or> ?RP \<or> ?RN \<or> ?RA\<close>)
@@ -4815,23 +4894,15 @@ proof-
     then show \<open>?R2\<close> 
     proof cases
       case 1
-      then obtain n u p w where nup_def:"(n,u,p) \<in> set (mergeNSNP R n1 n2) \<and>
-        \<not>(\<exists> n' \<in> set u. G' n' = w) \<and> RE (G' n) w \<and> semantics RE V G' w p"
+      then obtain n u p w where nup_def:"
+        (n,u,p) \<in> set (mergeNSNP R n1 n2) \<and> RE (G' n) w \<and> semantics RE V G' w p"
         by blast
-      then have u_def: \<open>\<exists> u'. u = mergeNS u' n1 n2\<close> 
-        using merge_NSNP_exi_1 case_prodE by fastforce
-      have \<open>\<not>(\<exists> n' \<in> set u. G n' = w)\<close> 
-      proof-
-        have \<open>\<forall> m \<in> set u. G m = G' m\<close> 
-        proof (safe)
-          fix m
-          assume \<open>m \<in> set u\<close>
-          then show \<open>G m = G' m\<close> 
-            by (metis u_def agrees_def l1 merge_NS_exi_1)
-        qed
-        then show ?thesis 
-          by (auto simp add: nup_def)
-      qed
+      then obtain n' u' p' where nup'_def:
+        \<open>(n',u',p') \<in> set R \<and> (if n' = n1 then n = n2 else n = n') \<and> u = mergeNS u' n1 n2 \<and>
+        p = mergeP p' n1 n2\<close>
+        by (smt (z3) case_prodE merge_NSNP_exi_1)
+      have u_def: \<open>\<exists> u'. u = mergeNS u' n1 n2\<close> 
+        using nup_def merge_NSNP_exi_1 case_prodE by fastforce
       moreover have \<open>RE (G n) w\<close> 
       proof-
         have \<open>n = n1 \<Longrightarrow> n1 = n2\<close> 
@@ -4842,7 +4913,7 @@ proof-
           by (simp add: nup_def)
       qed
       moreover have \<open>semantics RE V G w p\<close> 
-          by (smt (z3) nup_def agrees_merge_semantics case_prodE l1 merge_NSNP_exi_1)
+        by (smt (z3) nup_def agrees_merge_semantics case_prodE l1 merge_NSNP_exi_1)
       ultimately show ?thesis 
         using nup_def by blast
     next
@@ -4989,7 +5060,7 @@ proof-
       (\<forall> (n,a) \<in> set LA. V (G n) a)
     ) \<Longrightarrow> (
       (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -5042,7 +5113,7 @@ proof-
     qed
     then have \<open>(
         (\<exists> (n,u,p) \<in> set R. 
-          (\<exists> w. \<not>(\<exists> n' \<in> set u. G' n' = w) \<and> RE (G' n) w \<and> semantics RE V G' w p)) \<or>
+          (\<exists> w. RE (G' n) w \<and> semantics RE V G' w p)) \<or>
         (\<exists> (n1,n2) \<in> set RP. RE (G' n1) (G' n2)) \<or>
         (\<exists> (n1,n2) \<in> set RN. (G' n1) = (G' n2)) \<or>
         (\<exists> (n,a) \<in> set RA. V (G' n) a)
@@ -5054,10 +5125,9 @@ proof-
     proof cases
       case 1
       then obtain n' u' p' w' where nup_def':
-        \<open>(n',u',p') \<in> set R \<and> \<not>(\<exists> n' \<in> set u'. G' n' = w') \<and> RE (G' n') w' \<and> 
-          semantics RE V G' w' p'\<close> 
+        \<open>(n',u',p') \<in> set R \<and> RE (G' n') w' \<and> semantics RE V G' w' p'\<close> 
         by auto
-      have \<open>\<not>(\<exists> n \<in> set u'. G n = w') \<and> RE (G n') w' \<and> semantics RE V G w' p'\<close>  
+      have \<open>RE (G n') w' \<and> semantics RE V G w' p'\<close>  
       proof-
         have ndef: \<open>member n' (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
           by (meson member_sub_set nomNSNP_member nup_def' sub_set_union1 sub_set_union2)
@@ -5065,15 +5135,6 @@ proof-
           by (metis (no_types, lifting) member_sub_set nomNSNP_member nup_def' union_member)
         have pdef: \<open>sub_set (nominalsForm p') (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close>
           by (metis (no_types, lifting) member_sub_set nomNSNP_member nup_def' union_member)
-        have \<open>\<forall> n' \<in> set u'. G n' \<noteq> w'\<close> 
-        proof 
-          fix m
-          assume mdef:\<open>m \<in> set u'\<close> 
-          then have \<open>member m (ns_1 LA RA RN LP RP R ((n, \<diamond> p) # Q))\<close> 
-            using udef by blast
-          then show \<open>G m \<noteq> w'\<close> 
-            by (metis mdef agrees_def fresh_new l1 nup_def')
-        qed
         moreover have \<open>RE (G n') w'\<close> 
           using ndef by (smt (verit, best) agrees_def fresh_new l1 nup_def')
         moreover have \<open>semantics RE V G w' p'\<close> 
@@ -5352,17 +5413,19 @@ next
 qed
 
 lemma R_satted: \<open>
+  consistent LA RA RN LP RP R [] [] (T :: 'a itself) \<Longrightarrow>
   \<forall> (n,ns,p) \<in> set R. 
   \<forall> m \<in> set (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R). 
     member m ns \<Longrightarrow>
-  (\<forall> RE V G. sc (RE :: 'a \<Rightarrow> 'a \<Rightarrow> bool) (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP R [] []) \<Longrightarrow>
-  (\<forall> RE V G. sc (RE :: 'a \<Rightarrow> 'a \<Rightarrow> bool) (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP [] [] [])\<close> 
+  (\<forall> RE V G. sc RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP R [] []) \<Longrightarrow>
+  (\<forall> RE V G. sc RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP [] [] [])\<close> 
 proof (intro allI)
   let ?noms = \<open>nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R\<close>
   fix V :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   fix RE G 
+  assume a0:\<open>consistent LA RA RN LP RP R [] [] (T :: 'a itself)\<close>
   assume a1:\<open>
     \<forall> (n,ns,p) \<in> set R. 
     \<forall> m \<in> set ?noms. member m ns\<close>
@@ -5378,67 +5441,60 @@ proof (intro allI)
     )\<close> (is \<open>?L \<Longrightarrow> ?R\<close>)
   proof-
     assume l:?L
-    obtain RE' where RE'_def:
-      \<open>RE' = (\<lambda> x y. (\<exists> n \<in> set ?noms. G n = x) \<and> (\<exists> n \<in> set ?noms. G n = y) \<and> RE x y)\<close>
-      by simp
-    then have RE1: \<open>\<forall> n1 n2. 
-      member n1 ?noms \<longrightarrow> member n2 ?noms \<longrightarrow> RE (G n1) (G n2) = RE' (G n1) (G n2)\<close> 
-      by blast
-    have RE2: \<open>\<forall> w. \<not>(\<exists> n. member n ?noms \<and> (G n) = w) \<longrightarrow> \<not>(\<exists> w'. RE' w w' \<or> RE' w' w)\<close> 
-      using RE'_def by blast
-    have \<open>
-      (\<forall> (n1,n2) \<in> set LP. RE' (G n1) (G n2)) \<and>
-      (\<forall> (n,a) \<in> set LA. V (G n) a)\<close> 
-      using l RE1 by (smt (z3) case_prodD case_prodI2 member_sub_set nomNN_member sub_set_union1 
-          sub_set_union2)
-    then have \<open>
-      (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE' (G n) w \<and> semantics RE' V G w p)) \<or>
-      (\<exists> (n1,n2) \<in> set RP. RE' (G n1) (G n2)) \<or>
-      (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
-      (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> 
-      using a2 by (simp add: sc_def)
-    moreover have \<open>\<not>(\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE' (G n) w \<and> semantics RE' V G w p))\<close> 
+    show ?R
     proof (rule ccontr)
-      assume \<open>\<not>\<not>(\<exists>(n, u, p) \<in> set R. \<exists>w. 
-        \<not> (\<exists>n'\<in>set u. G n' = w) \<and> RE' (G n) w \<and> semantics RE' V G w p)\<close>
-      then obtain n u p w where nupw_def:
-        \<open>(n, u, p) \<in> set R \<and> \<not>(\<exists>n'\<in>set u. G n' = w) \<and> RE' (G n) w \<and> semantics RE' V G w p\<close>
-        by blast
-      then obtain n' where  n'_def: \<open>n' \<in> set ?noms \<and> G n' = w\<close> 
-        by (meson RE2 member_iff)
-      then have \<open>n' \<in> set u\<close> 
-        using a1 nupw_def by fastforce
-      then show False
-        using nupw_def n'_def by simp
+      assume not_r:\<open>\<not>?R\<close>
+      obtain RE' where RE'_def:
+        \<open>RE' = (\<lambda> x y. (\<exists> n \<in> set ?noms. G n = x) \<and> (\<exists> n \<in> set ?noms. G n = y) \<and> RE x y)\<close>
+        by simp
+      have \<open>
+        (\<forall> (n1,n2) \<in> set LP. RE' (G n1) (G n2)) \<and>
+        (\<forall> (n,a) \<in> set LA. V (G n) a)\<close>
+        by (smt (verit, del_insts) RE'_def case_prodD case_prodI2 l member_iff nomNN_member 
+            sub_set_union2 union_member)
+      then have \<open>
+        (\<exists> (n,ns,p) \<in> set R. (\<exists> w. RE' (G n) w \<and> semantics RE' V G w p)) \<or>
+        (\<exists> (n1,n2) \<in> set RP. RE' (G n1) (G n2)) \<or>
+        (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
+        (\<exists> (n,a) \<in> set RA. V (G n) a)\<close>
+        using a2 by (simp add: sc_def)
+      then obtain n ns p w where nsnp_def: \<open>(n,ns,p) \<in> set R \<and> RE' (G n) w \<and> semantics RE' V G w p\<close> 
+        using RE'_def not_r by blast
+      then obtain m where mdef: \<open>G m = w \<and> m \<in> set ?noms\<close> 
+        using RE'_def by auto
+      then have 1:\<open>\<forall> RE G (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool). sc RE V G LA RA RN LP ((n,m) # RP) R [] [(m,p)]\<close> 
+        by (simp add: a2 sc_pop_P sc_pop_RP)
+      have \<open>m \<in> set ns\<close> 
+        using mdef a1 nsnp_def by fastforce 
+      then show False 
+        using 1 by (smt (z3) a0 case_prodD consistent_def nsnp_def)
     qed
-    ultimately show ?R 
-      by (smt (verit, best) RE1 nomNN_member split_cong union_member)
   qed
   then show \<open>sc RE V G LA RA RN LP RP [] [] []\<close> 
     by (simp add: sc_def)
 qed
 
 lemma R_none: "
+  consistent LA RA RN LP RP R [] [] (T :: 'a itself) \<Longrightarrow>
   (\<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A)) \<Longrightarrow>
   saturate R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R) = None \<Longrightarrow>
-    (\<forall> RE V G. sc (RE :: 'a \<Rightarrow> 'a \<Rightarrow> bool) (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP R [] []) \<longleftrightarrow> 
-    common LA RA \<or> common LP RP \<or> reflect RN" (is \<open>?axiom \<Longrightarrow> ?sat \<Longrightarrow> ?L \<longleftrightarrow> ?R\<close>)
+    (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R [] []) \<longleftrightarrow> 
+    common LA RA \<or> common LP RP \<or> reflect RN" (is \<open>?cons \<Longrightarrow> ?axiom \<Longrightarrow> ?sat \<Longrightarrow> ?L \<longleftrightarrow> ?R\<close>)
 proof -
   let ?noms = \<open>nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R\<close>
+  assume cons:\<open>consistent LA RA RN LP RP R [] [] (T :: 'a itself)\<close>
   assume axi:?axiom
   assume sat:?sat
   then have satnone: \<open>\<forall> (n,ns,p) \<in> set R. \<forall> m \<in> set ?noms. member m ns\<close>
     by (smt (z3) ListSet.member.simps(1) case_prodI2 member_iff removent2 sat_iff)
   show "?L \<longleftrightarrow> ?R"
   proof
-    assume ?L
-    then have sc_satted: \<open>
-      \<forall> RE V G. sc (RE :: 'a \<Rightarrow> 'a \<Rightarrow> bool) (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP [] [] []\<close> 
-      using R_satted satnone by blast
+    assume l:?L
+    from R_satted have sc_satted:"
+      (\<forall> RE V G. sc RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G LA RA RN LP RP [] [] [])" 
+      using satnone l cons by blast
     show ?R 
     proof (rule ccontr)
       assume a:\<open>\<not> (common LA RA \<or> common LP RP \<or> reflect RN)\<close>
@@ -5531,7 +5587,7 @@ proof -
         ) \<longrightarrow> (
           (\<exists> (n,p) \<in> set []. semantics RE V G (G n) p) \<or>
           (\<exists> (n,u,p) \<in> set []. 
-            (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
           (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
           (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
           (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -5570,10 +5626,40 @@ proof -
   qed
 qed
 
+lemma member_split: \<open>member a (A @ B) \<Longrightarrow> member a A \<or> member a B\<close> 
+  apply (induct A)
+   apply simp 
+  by (metis ListSet.member.simps(2) append_Cons)
+
 lemma sat_exi: \<open>
   saturate R ns = Some (n,m,p,R',R'') \<Longrightarrow>
-  (n',u',p') \<in> set R'' \<Longrightarrow>
-  \<exists> (n'',u'',p'') \<in> set R. n' = n'' \<and> p' = p'' \<and> sub_set u'' u'\<close> sorry
+  member (n',u',p') R'' \<Longrightarrow>
+  \<exists> u''. member (n',u'',p') R \<and> sub_set u'' u'\<close> 
+proof-
+  assume \<open>saturate R ns = Some (n,m,p,R',R'')\<close>
+  then obtain R1 R2 ms where R1R2_def: \<open>R = R1 @ [(n,ms,p)] @ R2 \<and> R'' = R1 @ [(n,m # ms,p)] @ R2\<close> 
+    by (smt (verit, ccfv_SIG) append_self_conv2 saturate_split2)
+  assume \<open>member (n',u',p') R''\<close>
+  then have \<open>member (n',u',p') (R1 @ [(n,m # ms,p)] @ R2)\<close>
+    by (simp add: R1R2_def)
+  then have \<open>member (n',u',p') (R1) \<or> member (n',u',p') ((n,m # ms,p) # R2)\<close>  
+    using member_split by force
+  then consider \<open>member (n',u',p') (R1) \<or> member (n',u',p') (R2)\<close> | \<open>(n',u',p') = (n,m # ms,p)\<close> 
+    by (metis ListSet.member.simps(2))
+  then show \<open>\<exists> u''. member (n',u'',p') R \<and> sub_set u'' u'\<close> 
+  proof cases
+    case 1
+    then have "member (n',u',p') R" 
+      using R1R2_def by (metis append.left_neutral append_Nil2 member_sub_set sub_remove_middle)
+    then show ?thesis 
+      by auto
+  next
+    case 2
+    then show ?thesis 
+      by (metis ListSet.member.simps(2) R1R2_def append.left_neutral append_Cons member_sub_set 
+          prod.inject sub_remove_middle)
+  qed
+qed
 
 lemma ms_exi: \<open>
   saturate R ns = Some (n,m,p,R',R'') \<Longrightarrow>
@@ -5587,7 +5673,143 @@ proof-
     by (metis ListSet.member.simps(2) ListSet.member_remove append_Cons in_set_conv_decomp)
 qed
 
+lemma ms_exi2: \<open>
+  saturate R ns = Some (n,m,p,R',R'') \<Longrightarrow>
+  (n,ms,p) \<in> set R' \<Longrightarrow>
+  \<exists> ms'. (n,ms',p) \<in> set R\<close> 
+  by (meson ms_exi)
+
+lemma sat_sub_set: \<open>saturate R ns = Some (n,m,p,R',R'') \<Longrightarrow> sub_set R' R\<close> 
+  by (metis saturate_split self_append_conv2 sub_remove_middle)
+
+(*
+function sv' where
+  (*match RHS*)
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n,Pro a) # P) (T :: 'b) = 
+    sv' CLCT LA ((n,a) # RA) RN LP RP R Q P (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n1,Nom n2) # P) (T :: 'b) = 
+    sv' CLCT LA RA ((n1,n2) # RN) LP RP R Q P (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n,Neg p) # P) (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP R ((n,p) # Q) P (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n,Con p1 p2) # P) (T :: 'b) =
+    ((sv' CLCT LA RA RN LP RP R Q ((n,p1) # P) (T :: 'b)) \<and> 
+    (sv' CLCT LA RA RN LP RP R Q ((n,p2) # P)) (T :: 'b))\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n1,Sat n2 p) # P) (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP R Q ((n2,p) # P) (T :: 'b)\<close> |
+(*We need to try to find a nominal witnessing Pos later. See last case*)
+  \<open>sv' CLCT LA RA RN LP RP R Q ((n,Pos p) # P) (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP ((n,[],p) # R) Q P (T :: 'b)\<close>|
+
+  (*match LHS*)
+  \<open>sv' CLCT LA RA RN LP RP R ((n,Pro a) # Q) [] (T :: 'b) = 
+    sv' CLCT ((n,a) # LA) RA RN LP RP R Q [] (T :: 'b)\<close> |
+(*we assume/assert that n1=n2. therefore, remove one of them*)
+  \<open>sv' CLCT LA RA RN LP RP R ((n1,Nom n2) # Q) [] (T :: 'b) = 
+    sv' CLCT (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) 
+      (mergeNN LP n1 n2) (mergeNN RP n1 n2) (mergeNSNP R n1 n2) (mergeNP Q n1 n2) [] (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R ((n,Neg p) # Q) [] (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP R Q [(n,p)] (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R ((n,Con p1 p2) # Q) [] (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP R ((n,p1) # (n,p2) # Q) [] (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R ((n1,Sat n2 p) # Q) [] (T :: 'b) = 
+    sv' CLCT LA RA RN LP RP R ((n2,p) # Q) [] (T :: 'b)\<close> |
+
+  \<open>sv' CLCT LA RA RN LP RP R ((n,Pos p) # Q) [] (T :: 'b) = (
+    let nw = fresh (
+      nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
+      nominalsNN RP U nominalsNSNP R U nominalsNP ((n,Pos p) # Q)) 
+    in (sv' CLCT LA RA RN ((n,nw) # LP) RP R ((nw,p) # Q) []) (T :: 'b))\<close> |
+(*-------Try all relevant assignments of nominals to possibility on RHS-----------
+If no assignment can be made, check if current sequent is a tautology.
+Else we can process a statement @n\<diamond>P.
+  Find a nominal m to witness the statement
+  Check if the sequent with @n\<diamond>P removed fulfills both @n\<diamond>m and @mP
+Lastly, try another assignment. Remember that we already tried m.*)
+  \<open>sv' CLCT LA (RA :: (nat \<times> 'a) list) RN LP RP R [] [] (T :: 'b) = 
+      ((\<forall> (LA,RA,RN,LP,RP,R) \<in> CLCT. \<forall> RE (V :: 'b \<Rightarrow> 'a \<Rightarrow> bool) G. 
+        sc RE V G LA RA RN LP RP R [] []) \<and> (
+      case 
+        saturate R (
+          nominalsNA LA U nominalsNA RA U nominalsNN RN U 
+          nominalsNN LP U nominalsNN RP U nominalsNSNP R)
+      of
+        None \<Rightarrow> (common LA RA \<or> common LP RP \<or> reflect RN)
+      | Some (n,m,p,R',R'') \<Rightarrow> 
+          (if (sv' CLCT LA RA RN LP ((n,m) # RP) R' [] [] (T :: 'b) \<and> 
+            sv' CLCT LA RA RN LP RP R' [] [(m,p)] (T :: 'b)) 
+          then True 
+          else  sv' ({(LA, RA, RN, LP, RP, R)} \<union> CLCT) LA RA RN LP RP R'' [] [] (T :: 'b))))\<close> 
+  by pat_completeness simp_all
+termination sorry
+
+lemma \<open>\<close>
+
+lemma \<open>sv' CLCT LA RA RN LP RP R Q P T \<Longrightarrow> sv LA RA RN LP RP R Q P\<close>
+proof (induct LA RA RN LP RP R Q P arbitrary: CLCT rule: sv.induct) 
+  case (13 LA RA RN LP RP R)
+  let ?sat = \<open>
+    saturate R (
+      nominalsNA LA U nominalsNA RA U nominalsNN RN U 
+      nominalsNN LP U nominalsNN RP U nominalsNSNP R)\<close>
+  have 1:\<open>(
+      case 
+        ?sat
+      of
+        None \<Rightarrow> (common LA RA \<or> common LP RP \<or> reflect RN)
+      | Some (n,m,p,R',R'') \<Rightarrow> 
+          (if (sv' CLCT LA RA RN LP ((n,m) # RP) R' [] [] (T :: 'b) \<and> 
+            sv' CLCT LA RA RN LP RP R' [] [(m,p)] (T :: 'b)) 
+          then True 
+          else  sv' ({(LA, RA, RN, LP, RP, R)} \<union> CLCT) LA RA RN LP RP R'' [] [] (T :: 'b)))\<close> 
+    using 13 by simp
+  have 2:\<open>\<forall> n m p R' R''.
+    (if (sv' CLCT LA RA RN LP ((n,m) # RP) R' [] [] (T :: 'b) \<and> 
+      sv' CLCT LA RA RN LP RP R' [] [(m,p)] (T :: 'b)) 
+    then True 
+    else  sv' ({(LA, RA, RN, LP, RP, R)} \<union> CLCT) LA RA RN LP RP R'' [] [] (T :: 'b)) =
+    ((sv' CLCT LA RA RN LP ((n,m) # RP) R' [] [] (T :: 'b) \<and> 
+      sv' CLCT LA RA RN LP RP R' [] [(m,p)] (T :: 'b)) \<or>
+    sv' ({(LA, RA, RN, LP, RP, R)} \<union> CLCT) LA RA RN LP RP R'' [] [] (T :: 'b))\<close>
+    by meson
+  consider (none) \<open>?sat = None\<close> | (some) \<open>\<exists>n m p R' R''. ?sat = Some (n,m,p,R',R'')\<close> 
+    by (metis not_None_eq old.prod.exhaust)
+  then show ?case 
+  proof cases
+    case none
+    then have \<open>(common LA RA \<or> common LP RP \<or> reflect RN)\<close> 
+      using "1" by fastforce
+    moreover have \<open>(common LA RA \<or> common LP RP \<or> reflect RN) \<Longrightarrow> sv LA RA RN LP RP R [] []\<close>
+      using none by simp
+    ultimately show ?thesis 
+      by simp
+  next
+    case some
+    then obtain n m p R' R'' where satsome: \<open>?sat = Some (n,m,p,R',R'')\<close>
+      by blast
+    then have \<open>
+      ((sv' CLCT LA RA RN LP ((n,m) # RP) R' [] [] (T :: 'b) \<and> 
+        sv' CLCT LA RA RN LP RP R' [] [(m,p)] (T :: 'b)) \<or>
+      sv' ({(LA, RA, RN, LP, RP, R)} \<union> CLCT) LA RA RN LP RP R'' [] [] (T :: 'b))\<close>
+      using 1 2 by simp
+    then have \<open>
+      ((sv LA RA RN LP ((n,m) # RP) R' [] [] \<and> 
+        sv LA RA RN LP RP R' [] [(m,p)]) \<or>
+      sv LA RA RN LP RP R'' [] [])\<close> 
+      by (meson "13.hyps"(1) "13.hyps"(2) "13.hyps"(3) satsome)
+    then show ?thesis 
+      using satsome by simp
+  qed
+qed auto
+
 lemma R_some: "
+  consistent LA RA RN LP RP R [] [] (T :: 'a itself) \<Longrightarrow>
   \<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A) \<Longrightarrow>
   saturate R (nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R) = Some (n,m,p,R',R'') \<Longrightarrow>
@@ -5595,14 +5817,47 @@ lemma R_some: "
         (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n,m) # RP) R' [] []) \<and> 
           (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R' [] [(m,p)]) \<or>
         (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R'' [] [])" 
-(is \<open>?P1 \<Longrightarrow> ?P2 \<Longrightarrow> ?L \<longleftrightarrow> ?R\<close>)
+(is \<open>?cons \<Longrightarrow> ?P1 \<Longrightarrow> ?P2 \<Longrightarrow> ?L \<longleftrightarrow> ?R\<close>)
 proof
   let ?noms = \<open>nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R\<close>
   assume axi: ?P1
   assume sat: ?P2
   assume l: ?L
-  show ?R sorry
+  have \<open>
+    \<not>((\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n,m) # RP) R' [] []) \<and> 
+          (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R' [] [(m,p)])) \<Longrightarrow>
+    (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R'' [] [])\<close> (is \<open>\<not>(?L1\<and>?L2) \<Longrightarrow> ?R1\<close>) 
+  proof (intro allI)
+    fix V :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+    fix RE G
+    assume \<open>\<not>(?L1 \<and> ?L2)\<close>
+    then consider \<open>\<not>?L1\<close> | \<open>\<not>?L2\<close>
+      by blast
+    then show \<open>sc RE V G LA RA RN LP RP R'' [] []\<close>
+    proof cases
+      case 1
+      then obtain RE' V' G' where 
+        \<open>\<not>sc RE' (V' :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G' LA RA RN LP ((n,m) # RP) R' [] []\<close>
+        by blast
+      then have \<open>
+        (\<forall> (n1,n2) \<in> set LP. RE' (G' n1) (G' n2)) \<and>
+        (\<forall> (n,a) \<in> set LA. V' (G' n) a) \<and>
+        \<not>(\<exists> (n,ns,p) \<in> set R'. (\<exists> w. RE' (G' n) w \<and> semantics RE' V' G' w p)) \<and>
+        \<not>(\<exists> (n1,n2) \<in> set ((n,m) # RP). RE' (G' n1) (G' n2)) \<and>
+        \<not>(\<exists> (n1,n2) \<in> set RN. (G' n1) = (G' n2)) \<and>
+        \<not>(\<exists> (n,a) \<in> set RA. V' (G' n) a)
+        \<close>
+        by (simp add: sc_def)
+      then have \<open>\<forall> RE V G. \<close>
+      then show ?thesis sorry
+    next
+      case 2
+      then show ?thesis sorry
+    qed
+  qed
+  then show ?R 
+    by blast
 next
   let ?noms = \<open>nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U nominalsNN RP U 
       nominalsNSNP R\<close>
@@ -5617,8 +5872,7 @@ next
       (\<forall> (n1,n2) \<in> set LP. RE (G n1) (G n2)) \<and>
       (\<forall> (n,a) \<in> set LA. V (G n) a)
     ) \<longrightarrow> (
-      (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+      (\<exists> (n,u,p) \<in> set R. (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set RA. V (G n) a)
@@ -5636,41 +5890,79 @@ next
       using r by fastforce
     then show \<open>
       (\<exists> (n,u,p) \<in> set R. 
-        (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+        (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
       (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
       (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
       (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> 
     proof cases
       case 1
-      then show ?thesis sorry
+      consider \<open>sc RE V G LA RA RN LP RP R' [] []\<close> | \<open>RE (G n) (G m) \<and> semantics RE V G (G m) p\<close>
+          by (metis "1" sc_pop_P sc_pop_RP)
+      then show ?thesis 
+      proof cases
+        case 1
+        have \<open>
+          \<exists> (n,u,p) \<in> set R'. 
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p) \<Longrightarrow>
+          \<exists> (n,u,p) \<in> set R. 
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)\<close> 
+        proof-
+          assume \<open>
+            \<exists> (n,u,p) \<in> set R'. 
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)\<close>
+          then obtain n' u' p' w' where nupw'_def:
+            \<open>(n',u',p') \<in> set R' \<and> RE (G n') w' \<and> semantics RE V G w' p'\<close> 
+            by blast
+          then have "\<exists> ms'. (n',ms',p') \<in> set R"
+            using sat ms_exi2 by (meson member_iff member_sub_set sat_sub_set)
+          then show \<open>
+            \<exists> (n,u,p) \<in> set R. 
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)\<close> 
+            using nupw'_def by blast
+        qed
+        moreover have \<open>
+          (\<exists> (n,u,p) \<in> set R'. 
+            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
+          (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
+          (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
+          (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> 
+          using 1 a by (simp add: sc_def) 
+        ultimately show ?thesis 
+          by linarith
+      next
+        case 2
+        then show ?thesis 
+          using ms_def by blast
+      qed
     next
       case 2
       then have \<open>
         (\<exists> (n,u,p) \<in> set R''. 
-          (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<or>
+          (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
         (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
         (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
         (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> 
         using a by (simp add: sc_def) 
       moreover have \<open>
         (\<exists> (n,u,p) \<in> set R''. 
-          (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p)) \<Longrightarrow>
+          (\<exists> w. RE (G n) w \<and> semantics RE V G w p) ) \<Longrightarrow>
         (\<exists> (n,u,p) \<in> set R. 
-          (\<exists> w. \<not>(\<exists> n' \<in> set u. G n' = w) \<and> RE (G n) w \<and> semantics RE V G w p))\<close> (is \<open>?L1 \<Longrightarrow> ?R1\<close>)
+          (\<exists> w. RE (G n) w \<and> semantics RE V G w p))\<close> (is \<open>?L1 \<Longrightarrow> ?R1\<close>)
       proof-
         assume ?L1
         then obtain n' u' p' w' where nupw'_def: \<open>(n',u',p') \<in> set R'' \<and> 
-          \<not>(\<exists> n' \<in> set u'. G n' = w') \<and> RE (G n') w' \<and> semantics RE V G w' p'\<close>
+          RE (G n') w' \<and> semantics RE V G w' p'\<close>
           by blast
-        then obtain n'' u'' p'' where nupw''_def:
-          \<open>(n'',u'',p'') \<in> set R \<and> n'' = n' \<and> p'' = p' \<and> sub_set u'' u'\<close> 
-          using sat sat_exi by (smt (z3) case_prodE case_prodI)
-        then have \<open>\<not>(\<exists> n' \<in> set u''. G n' = w') \<and> RE (G n'') w' \<and> semantics RE V G w' p''\<close> 
+        then obtain u'' where nupw''_def:
+          \<open>(n',u'',p') \<in> set R \<and> sub_set u'' u'\<close> 
+          using sat sat_exi by (metis member_iff) 
+        then have \<open>
+          (\<exists> w. RE (G n') w \<and> semantics RE V G w p')\<close> 
           using nupw'_def by auto
         then show ?R1 
           using nupw''_def by auto
       qed
-      ultimately show ?thesis
+      ultimately show ?thesis 
         by blast
     qed
   qed
@@ -5681,56 +5973,56 @@ qed
 
 theorem correctness: \<open>
   (\<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A)) \<Longrightarrow>
-  sv LA RA RN LP RP R Q P = 
-  (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R Q P)\<close>
+  (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R Q P) \<Longrightarrow>
+  sv LA RA RN LP RP R Q P\<close>
 proof (induct LA RA RN LP RP R Q P rule: sv.induct)
   case (1 LA RA RN LP RP R Q n a P)
   then show ?case 
-    using "1.hyps" by (auto simp add: P_Pro)
+    by (simp add: P_Pro)
 next
   case (2 LA RA RN LP RP R Q n1 n2 P)
   then show ?case 
-    using "2.hyps" by (auto simp add: P_Nom)
+    by (auto simp add: P_Nom 2)
 next
   case (3 LA RA RN LP RP R Q n p P)
   then show ?case 
-    using "3.hyps" by (auto simp add: P_Neg)
+    by (auto simp add: P_Neg 3)
 next
   case (4 LA RA RN LP RP R Q n p1 p2 P)
   then show ?case 
-    using "4.hyps" by (auto simp add: P_Con)
+    by (auto simp add: P_Con 4)
 next
   case (5 LA RA RN LP RP R Q n1 n2 p P)
   then show ?case 
-    using "5.hyps" by (auto simp add: P_Sat)
+    by (auto simp add: P_Sat 5)
 next
   case (6 LA RA RN LP RP R Q n p P)
   then show ?case 
-    using "6.hyps" by (auto simp add: P_Pos)
+    by (auto simp add: P_Pos 6)
 next
   case (7 LA RA RN LP RP R n a Q)
   then show ?case 
-    using "7.hyps" by (auto simp add: Q_Pro)
+    by (auto simp add: Q_Pro 7)
 next
   case (8 LA RA RN LP RP R n1 n2 Q)
   then show ?case 
-    using "8.hyps" by (meson sv.simps(8) Q_Nom)
+    by (meson sv.simps(8) Q_Nom 8)
 next
   case (9 LA RA RN LP RP R n p Q)
   then show ?case 
-    using "9.hyps" by (auto simp add: Q_Neg)
+    by (auto simp add: Q_Neg 9)
 next
   case (10 LA RA RN LP RP R n p1 p2 Q)
   then show ?case 
-    using "10.hyps" by (auto simp add: Q_Con)
+    by (auto simp add: Q_Con 10)
 next
   case (11 LA RA RN LP RP R n1 n2 p Q)
   then show ?case 
-    using "11.hyps" by (auto simp add: Q_Sat)
+    by (auto simp add: Q_Sat 11)
 next
   case (12 LA RA RN LP RP R n p Q)
   then show ?case 
-    using "12.hyps" by (meson sv.simps(12) Q_Pos)
+    by (meson sv.simps(12) Q_Pos 12)
 next
   case (13 LA RA RN LP RP R)
   let ?sat = \<open>
@@ -5738,6 +6030,7 @@ next
       nominalsNSNP R)\<close>
   have axi: \<open>(\<forall> (A :: 'a set). finite A \<longrightarrow> (\<exists> (a :: 'a). a \<notin> A))\<close> 
     by (simp add: "13.prems")
+  have cons:\<open>consistent LA RA RN LP RP R [] [] (T :: 'a itself)\<close> sorry
 
   consider (none)\<open>?sat = None\<close> | (some)\<open>\<exists> n m p R' R''. ?sat = Some (n,m,p,R',R'')\<close> 
     by (metis option.exhaust prod_cases5)
@@ -5746,10 +6039,10 @@ next
     case none
     then have \<open>(\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. 
       sc RE V G LA RA RN LP RP R [] []) \<longleftrightarrow> common LA RA \<or> common LP RP \<or> reflect RN\<close> 
-      using axi by (simp add: R_none)
+      using axi cons by (simp add: R_none)
     moreover have \<open>sv LA RA RN LP RP R [] [] \<longleftrightarrow> common LA RA \<or> common LP RP \<or> reflect RN\<close> 
       using none by simp
-    ultimately show ?thesis by simp
+    ultimately show ?thesis using "13.prems"(2) by blast
   next
     case some
     then obtain n m p R' R'' where sat_def:\<open>?sat = Some (n,m,p,R',R'')\<close> by auto
@@ -5758,7 +6051,7 @@ next
         (\<forall>  RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP ((n,m) # RP) R' [] []) \<and> 
           (\<forall>  RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R' [] [(m,p)]) \<or>
         (\<forall>  RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G LA RA RN LP RP R'' [] [])\<close> 
-      using axi R_some by metis
+      using axi R_some cons by metis
     moreover have \<open>
       sv LA RA RN LP RP R [] [] \<longleftrightarrow>
         (sv LA RA RN LP ((n,m) # RP) R' [] [] \<and> 
@@ -5766,9 +6059,9 @@ next
         sv LA RA RN LP RP R'' [] []\<close>
       using sat_def by simp
     ultimately show ?thesis 
-      using "13.hyps" sat_def axi by auto
+      using "13.hyps" sat_def axi by (metis "13.prems"(2))
   qed
-qed
+qed*)
 (*/soundness*)
 
 (*abbreviations*)
@@ -5788,6 +6081,24 @@ abbreviation Nes (\<open>\<box> _\<close> 800)
 datatype atoms = A | B | C | D | E | F | G | H | I | J | K | L | M | N 
 
 (*valid tests*)
+proposition \<open>prover 
+  (NOT ((Sat 1 (Pos (NOM 4))) AND 
+  (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
+  NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A))))))) AND 
+  (NOT (Sat 2 (Pos (Pro A))))))\<close>
+  by eval
+
+proposition \<open>prover 
+  (NOT ((Sat 1 (Pos (NOM 4))) AND 
+  (NOT (Sat 2 (Pos (Pro A)))) AND
+  (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
+  NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A)))))))))\<close>
+  by eval
+
+proposition \<open>prover (
+  (AT 1 NOM 4) THEN (AT 2 \<diamond> PRO A) OR ((NOT ((AT 2 \<diamond> NOM 3) AND AT 3 PRO A) AND NOT ((AT 2 \<diamond> NOM 4) AND AT 4 PRO A))))\<close>
+  by eval
+
 proposition \<open>prover (((Sat (1)  (Pos (Nom (2)))) AND (Sat (2) (Pro A))) 
                      THEN (Sat (1) (Pos (Pro A))))\<close>
   by eval
