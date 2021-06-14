@@ -1,5 +1,6 @@
 theory ListSet imports Main
 begin
+
 primrec member where
   \<open>member _ [] = False\<close> |
   \<open>member m (n # A) = (m = n \<or> member m A)\<close>
