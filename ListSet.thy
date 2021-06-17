@@ -51,6 +51,9 @@ lemma remove_simp [simp]: \<open>remove A B = C \<longrightarrow> set A - set B 
    apply simp
   by (metis insert_Diff_if list.simps(15) member_iff remove.simps(2))
 
+lemma remove_iff : \<open>set (remove A B) = set A - set B\<close> 
+  by simp
+
 lemma removent: \<open>\<not>common A B \<Longrightarrow> remove A B = A\<close> 
 proof (induct A)
 case Nil
@@ -306,9 +309,7 @@ lemma member_sub_set: \<open>(\<forall> a. member a A \<longrightarrow> member a
   by auto
 
 lemma sub_remove_set: \<open>sub_set A B \<Longrightarrow> sub_set (remove A C) B\<close> 
-  apply (induct A) 
-   apply simp 
-  by (metis list.distinct(1) remove.simps(2) sub_set_def)
+  using remove_iff by fast
 
 lemma sub_remove_middle: \<open>A = A1 @ A2 @ A3 \<Longrightarrow> A' = A1 @ A3 \<Longrightarrow> sub_set A' A\<close>
   apply (induct A1 arbitrary: A A') 

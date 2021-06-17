@@ -53,7 +53,7 @@ primrec semantics_form where
   \<open>semantics_form R V G w (Pro a) = V w a\<close> |
   \<open>semantics_form R V G w (Nom n) = (G n = w)\<close> |
   \<open>semantics_form R V G w (Neg p) = (\<not> semantics_form R V G w p)\<close> |
-  \<open>semantics_form R V G w (Con p q) = (semantics_form R V G w p \<and> semantics_form R V G w p)\<close> |
+  \<open>semantics_form R V G w (Con p q) = (semantics_form R V G w p \<and> semantics_form R V G w q)\<close> |
   \<open>semantics_form R V G w (Sat n p) = semantics_form R V G (G n) p\<close> |
   \<open>semantics_form R V G w (Pos p) = (\<exists> w'. R w w' \<and> semantics_form R V G w' p)\<close>
 
@@ -61,8 +61,49 @@ definition semantics_SC where
   \<open>semantics_SC R V G A B \<equiv> 
     (\<forall> (n,p) \<in> A. semantics_form R V G (G n) p) \<longrightarrow> (\<exists> (n,p) \<in> B. semantics_form R V G (G n) p)\<close>
 
+lemma lcon:\<open>
+  semantics_SC R V G (insert (n, p) (insert (n, q) \<Gamma>)) \<Delta> \<Longrightarrow> 
+    semantics_SC R V G (insert (n, Con p q) \<Gamma>) \<Delta>\<close> (is \<open>?L1 \<Longrightarrow> ?R1\<close>) 
+proof-
+  assume a1:?L1
+  have \<open>
+    (\<forall> (n,p) \<in> (insert (n, Con p q) \<Gamma>). semantics_form R V G (G n) p)
+      \<Longrightarrow> (\<exists> (n,p) \<in> \<Delta>. semantics_form R V G (G n) p)\<close> (is \<open>?L2 \<Longrightarrow> ?R2\<close>)
+  proof -
+    assume a2: ?L2
+    have \<open>semantics_form R V G (G n) p\<close> 
+      using a2 by fastforce
+    moreover have \<open>semantics_form R V G (G n) q\<close> 
+      using a2 by fastforce
+    ultimately have \<open>(\<forall> (n,p) \<in> (insert (n, p) (insert (n, q) \<Gamma>)). semantics_form R V G (G n) p)\<close>
+      using a2 by simp
+    then show ?R2 
+      using a1 semantics_SC_def by blast
+  qed
+  then show ?R1
+    using semantics_SC_def by metis
+qed
 
-lemma completness: \<open>finite A \<Longrightarrow> finite B \<Longrightarrow> (\<forall> R V G. semantics_SC R V G A B) \<Longrightarrow> A \<turnstile> B\<close>
-(is \<open>?P1 \<Longrightarrow> ?P2 \<Longrightarrow> ?SEM \<Longrightarrow> ?SC\<close>)
-  sorry
+lemma soundness: \<open>
+  A \<turnstile> B \<Longrightarrow> 
+    (\<forall> R (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. semantics_SC R V G A B)\<close>
+proof (induct rule: SC.induct)
+  case (3 \<Gamma> n m \<Gamma>' \<Delta> \<Delta>')
+  then show ?case sorry
+next
+  case (7 \<Gamma> n p \<Delta> q)
+  then show ?case using lcon semantics_SC_def 
+    by (smt (z3) Pair_inject case_prodE case_prodI2 insert_iff semantics_form.simps(4))
+next
+  case (10 n p \<Gamma> \<Delta> m)
+  then show ?case sorry
+next
+  case (11 \<Gamma> n p \<Delta> m)
+  then show ?case sorry
+qed (auto simp add: semantics_SC_def)
+
+lemma completness: \<open>(\<forall> R V G. semantics_SC R V G A B) \<Longrightarrow> A \<turnstile> B\<close>
+proof (induct rule: SC.induct)
+
+
 end

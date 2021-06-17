@@ -3611,6 +3611,9 @@ end
 
 definition agrees where \<open>agrees f x y = (\<lambda> x'. if x' = x then y else f x')\<close>
 
+lemma agrees_iff: \<open>agrees f x y = f(x := y)\<close> 
+  unfolding agrees_def fun_upd_def by simp
+
 lemma exi_pop: \<open>(\<exists> x' \<in> set (x # xs). P x') \<longleftrightarrow> ((\<exists> x' \<in> set xs. P x') \<or> P x)\<close> 
   by (metis list.set_intros(1) list.set_intros(2) set_ConsD)
 
