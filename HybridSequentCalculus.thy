@@ -5159,7 +5159,7 @@ proof-
       case 1
       consider \<open>sc RE V G LA RA RN LP RP R' [] []\<close> | \<open>RE (G n) (G m) \<and> semantics RE V G (G m) p\<close>
           by (metis "1" sc_pop_P sc_pop_RP)
-      then show ?thesis 
+      then show ?thesis
       proof cases
         case 1
         have \<open>
@@ -5181,18 +5181,11 @@ proof-
             (\<exists> w. RE (G n) w \<and> semantics RE V G w p)\<close> 
             using nupw'_def by blast
         qed
-        moreover have \<open>
-          (\<exists> (n,u,p) \<in> set R'. 
-            (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
-          (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
-          (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
-          (\<exists> (n,a) \<in> set RA. V (G n) a)\<close> 
-          using 1 a by (simp add: sc_def) 
-        ultimately show ?thesis 
-          by linarith
+        then show ?thesis
+          using 1 a by (auto simp add: sc_def)
       next
         case 2
-        then show ?thesis 
+        then show ?thesis
           using ms_def by blast
       qed
     next
@@ -5274,11 +5267,9 @@ proof (intro allI)
   fix V :: "'a \<Rightarrow> 'b \<Rightarrow> bool"
   fix RE G w
   assume \<open>prover p\<close>
-  then have \<open>sv [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)]\<close>
-    using prover_def by auto
   then have \<open>
     (\<forall> RE (V :: 'a \<Rightarrow> 'b \<Rightarrow> bool) G. sc RE V G [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)])\<close> 
-    by (meson Q_Neg sc_pop_Q sc_semantics_iff semantics.simps(3) soundness')
+    by (meson prover_def Q_Neg sc_pop_Q sc_semantics_iff semantics.simps(3) soundness')
   then show \<open>semantics RE V G w p\<close> 
     using sc_semantics_iff by fastforce
 qed
@@ -5307,6 +5298,35 @@ proposition \<open>prover
   NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A))))))) AND 
   (NOT (Sat 2 (Pos (Pro A))))))\<close>
   by eval
+
+lemma \<open>
+  \<forall> RE V G w. semantics RE (V :: 'a \<Rightarrow> atoms \<Rightarrow> bool) G w 
+    (NOT ((Sat 1 (Pos (NOM 4))) AND 
+    (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
+     NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A))))))) AND 
+    (NOT (Sat 2 (Pos (Pro A))))))\<close> 
+proof (intro allI)
+  let ?P1 = 
+    "(NOT ((Sat 1 (Pos (NOM 4))) AND 
+     (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
+      NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A))))))) AND 
+     (NOT (Sat 2 (Pos (Pro A))))))"
+  let ?P2 = 
+    \<open>(NOT ((Sat 1 (Pos (NOM 4))) AND 
+     (NOT (Sat 2 (Pos (Pro A)))) AND
+     (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
+      NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A)))))))))\<close>
+  fix RE G w
+  fix V :: \<open>'a \<Rightarrow> atoms \<Rightarrow> bool\<close>
+  have \<open>prover ?P2\<close>
+    by eval
+  then have \<open>semantics RE V G w ?P2\<close> 
+    by (auto simp add: soundness) 
+  moreover have \<open>semantics RE V G w ?P2 \<Longrightarrow> semantics RE V G w ?P1\<close> 
+    by force
+  ultimately show \<open>semantics RE V G w ?P1\<close>
+    by simp
+qed
 
 proposition \<open>prover 
   (NOT ((Sat 1 (Pos (NOM 4))) AND 
