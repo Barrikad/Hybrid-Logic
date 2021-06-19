@@ -1,4 +1,4 @@
-theory HybridSequentCalculus imports Main ListSet
+theory HybridSC2 imports Main ListSet
 begin
 
 datatype 'a hybr_form 
@@ -294,8 +294,6 @@ definition \<open>sc RE V G LA RA RN LP RP R Q P \<equiv>
     (\<exists> (n,a) \<in> set RA. V (G n) a)
   )\<close>
 
-definition consistent where  \<open>
-  consistent LA RA RN LP RP R Q P \<equiv> \<not> (\<exists> (n,ns,p) \<in> set R. \<exists> m \<in> ns. sv LA RA RN LP RP R Q (P))\<close>
 
 (*abbreviations*)
 abbreviation Imp (infixr "THEN"  180)
