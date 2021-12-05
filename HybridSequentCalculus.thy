@@ -5292,7 +5292,8 @@ abbreviation Nes (\<open>\<box> _\<close> 800)
 datatype atoms = A | B | C | D | E | F | G | H | I | J | K | L | M | N 
 
 (*valid tests*)
-proposition \<open>prover 
+(*counter-example for incompleteness*)
+proposition \<open>\<not>prover 
   (NOT ((Sat 1 (Pos (NOM 4))) AND 
   (NOT (Sat 1 (Pos (NOT ((Sat 2 (Pos (NOM 3))) AND (Sat 3 (Pro A))) AND 
   NOT ((Sat 2 (Pos (NOM 4))) AND (Sat 4 (Pro A))))))) AND 
@@ -5327,6 +5328,7 @@ proof (intro allI)
   ultimately show \<open>semantics RE V G w ?P1\<close>
     by simp
 qed
+(*-----------------------------------*)
 
 proposition \<open>prover 
   (NOT ((Sat 1 (Pos (NOM 4))) AND 

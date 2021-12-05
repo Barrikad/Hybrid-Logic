@@ -1,4 +1,4 @@
-theory HybridSC2 imports Main ListSet
+theory HybridSC3 imports Main
 begin
 
 datatype 'a hybr_form 
@@ -9,104 +9,15 @@ datatype 'a hybr_form
   | Sat nat \<open>'a hybr_form\<close> (\<open>AT _ _\<close> [899]  899)
   | Pos \<open>'a hybr_form\<close> (\<open>\<diamond> _\<close> [800] 800)
 
-(*find the maximal nominal in a list of nominals, and return one bigger than that*)
-definition lmax :: \<open>nat list \<Rightarrow> nat\<close> where \<open>lmax N \<equiv> foldr (\<lambda> x i. max x i) N 0\<close>
-
-lemma lmax_max: "member n N \<Longrightarrow> n \<le> lmax N"
-proof (induct N)
-  case (Cons a N)
-  then have \<open>a = n \<or> member n N\<close>
-      by (metis member.simps(2))
-  then show ?case 
-    using Cons lmax_def by auto
-qed simp
+primrec maxnomP where
+  \<open>maxnomP mn (Pro a) = mn\<close> |
+  \<open>maxnomP mn (Nom n) = max mn n\<close> |
+  \<open>maxnomP mn (Neg p) = maxnomP mn p\<close> |
+  \<open>maxnomP mn (Con p1 p2) = max (maxnomP mn p1) (maxnomP mn p2)\<close> |
+  \<open>maxnomP mn (Sat n p) = max n (maxnomP mn p)\<close> |
+  \<open>maxnomP mn (Pos p) = maxnomP mn p\<close> 
   
-(*return nominal not in a set of nominals*)
-abbreviation fresh where \<open>fresh N \<equiv> Suc (lmax N)\<close>
-
-lemma fresh_new: "fresh N = n \<Longrightarrow> \<not> member n N"
-  using lmax_max by fastforce
-
-(*get a set of all used nominal, for different formula representations*)
-primrec nominalsForm where
-  \<open>nominalsForm (Pro a) = []\<close> |
-  \<open>nominalsForm (Nom n) = [n]\<close> |
-  \<open>nominalsForm (Neg p) = nominalsForm p\<close> |
-  \<open>nominalsForm (Con p1 p2) = union (nominalsForm p1) (nominalsForm p2)\<close> |
-  \<open>nominalsForm (Sat n p) = add n (nominalsForm p)\<close> |
-  \<open>nominalsForm (Pos p) = nominalsForm p\<close>
-
-primrec nominalsForms where
-  \<open>nominalsForms [] = []\<close> |
-  \<open>nominalsForms (x # xs) = union (nominalsForm x) (nominalsForms xs)\<close>
-
-fun nominalsNN where
-  \<open>nominalsNN [] = []\<close> |
-  \<open>nominalsNN ((n1,n2) # NN) = add n1 (add n2 (nominalsNN NN))\<close>
-
-fun nominalsNA where
-  \<open>nominalsNA [] = []\<close> |
-  \<open>nominalsNA ((n,a) # NA) = add n (nominalsNA NA)\<close>
-
-fun nominalsNP where
-  \<open>nominalsNP [] = []\<close> |
-  \<open>nominalsNP ((n,p) # NP) = add n (union (nominalsForm p) (nominalsNP NP))\<close>
-
-fun nominalsNNSP where
-  \<open>nominalsNNSP [] = []\<close> |
-  \<open>nominalsNNSP ((n,ns,p) # NNSP) = nominalsNNSP NNSP U add n (ns U nominalsForm p)\<close>
-
-lemma form_is_set: \<open>is_set (nominalsForm P)\<close>
-  apply (induct P)
-       apply simp_all
-   apply (simp add: union_is_set)
-  by (simp add: add_def)
-
-lemma forms_is_set: \<open>is_set (nominalsForms ps)\<close>
-  by (induct ps) (simp_all add: form_is_set union_is_set)
-
-lemma NN_is_set: \<open>is_set (nominalsNN NN)\<close>
-  apply (induct NN)
-   apply simp
-  by (smt (verit) add_def is_set.simps(2) nominalsNN.simps(2) old.prod.exhaust)
-
-lemma NA_is_set: \<open>is_set (nominalsNA NA)\<close>
-  apply (induct NA)
-   apply simp
-  by (metis nominalsNA.simps(2) old.prod.exhaust union.simps(1) union.simps(2) union_is_set)
- 
-lemma NP_is_set: \<open>is_set (nominalsNP NP)\<close>
-  apply (induct NP)
-   apply simp 
-  by (metis add_is_set form_is_set list.discI nominalsNP.elims union_is_set)
-
-lemma NNSP_is_set: \<open>is_set (nominalsNNSP NNSP)\<close>
-proof (induct NNSP)
-  case Nil
-  then show ?case by simp
-next
-  case (Cons a NNSP)
-  then show ?case 
-    by (metis list.discI list.inject nominalsNNSP.elims union_is_set)
-qed
-
-(*merge functions replaces all occurences of a nominal with another.
-Used when two nominals are found to be equal*)
-fun mergeNS where 
-  \<open>mergeNS NS na nb = map (\<lambda> n. if n = na then nb else n) NS\<close>
-
-fun mergeNN where
-  \<open>mergeNN [] na nb = []\<close> |
-  \<open>mergeNN ((n1,n2) # NN) na nb = (
-    let n3 = (if n1 = na then nb else n1) in 
-    let n4 = (if n2 = na then nb else n2) in 
-    (n3,n4) # (mergeNN NN na nb))\<close>
-
-fun mergeNA where
-  \<open>mergeNA [] na nb = []\<close> |
-  \<open>mergeNA ((n1,a) # NA) na nb = (if n1 = na then nb else n1, a) # (mergeNA NA na nb)\<close>
-
-fun mergeP where
+primrec mergeP where
   \<open>mergeP (Pro a) na nb = Pro a\<close> |
   \<open>mergeP (Nom n) na nb = Nom (if n = na then nb else n)\<close> |
   \<open>mergeP (Neg p) na nb = Neg (mergeP p na nb)\<close> |
@@ -118,68 +29,32 @@ fun mergeNP where
   \<open>mergeNP [] na nb = []\<close> |
   \<open>mergeNP ((n,p) # NP) na nb = (if n = na then nb else n, mergeP p na nb) # (mergeNP NP na nb)\<close>
 
-fun mergeNNSP where
-  \<open>mergeNNSP [] na nb = []\<close> |
-  \<open>mergeNNSP ((n,ns,p) # R) na nb = 
-    (if n = na then nb else n, mergeNS ns na nb, mergeP p na nb) # (mergeNNSP R na nb)\<close>
-
-fun clear where
-  \<open>clear [] = []\<close> |
-  \<open>clear ((n,ns,p) # R) = (n,[],p) # clear R\<close>
-
-fun saturate' where
-  \<open>saturate' R' [] ns = None\<close> |
-  \<open>saturate' R' ((n,ms,p) # R) ns = (
-    case remove ns ms of
-      []      \<Rightarrow> saturate' (R' @ [(n,ms,p)]) R ns
-    | (m # _) \<Rightarrow> Some (n,m,p,clear (R' @ R),R' @ [(n,m # ms,p)] @ R))\<close>
-
-abbreviation saturate where \<open>saturate R ns \<equiv> saturate' [] R ns\<close>
-
-lemma sat_empty: \<open>saturate [] ns = None\<close>
-  by (simp)
-              
+(*validity checks*)
 (*Check if any of the pairs in a list contains two of the same element*)
 fun reflect where
   \<open>reflect [] = False\<close> |
-  \<open>reflect ((n1,n2) # B) = (n1 = n2 \<or> reflect B)\<close>
+  \<open>reflect ((n1,Nom n2) # B) = (n1 = n2 \<or> reflect B)\<close> |
+  \<open>reflect (_ # B) = reflect B\<close>
 
-lemma reflect_iff[iff]: \<open>reflect nn \<longleftrightarrow> (\<exists> n. (n,n) \<in> set nn)\<close> 
+lemma reflect_iff[iff]: \<open>reflect nn \<longleftrightarrow> (\<exists> n. (n,Nom n) \<in> set nn)\<close> 
   apply (induct nn)
-   apply simp
-  by (metis list.set_intros(1) list.set_intros(2) reflect.simps(2) set_ConsD surj_pair)
+   apply simp 
+  by (smt (z3) insert_iff list.distinct(1) list.inject list.set(2) 
+      reflect.elims(1) reflect.simps(2))
 
+primrec member where
+  \<open>member x [] = False\<close> |
+  \<open>member x (y # xs) = (x = y \<or> member x xs)\<close>
 
-abbreviation ns_0 where \<open>ns_0 LA RA RN LP RP R Q P \<equiv> 
-  nominalsNA LA U nominalsNA RA U nominalsNN RN U
-  nominalsNN LP U nominalsNN RP U nominalsNNSP R U nominalsNP Q U nominalsNP P\<close>
-context
-begin
-(*termination functions*)
-private primrec pos_count where 
-  \<open>pos_count (Pro a) = 0\<close> |
-  \<open>pos_count (Nom n) = 0\<close> |
-  \<open>pos_count (Neg p) = pos_count p\<close> |
-  \<open>pos_count (Con p1 p2) = pos_count p1 + pos_count p2\<close> |
-  \<open>pos_count (Sat n p) = pos_count p\<close> |
-  \<open>pos_count (Pos p) = Suc (pos_count p)\<close>
+lemma member_iff[iff]: \<open>member x xs \<longleftrightarrow> x \<in> set xs\<close>
+  by (induct xs) simp_all
 
-private fun pos_countNP where
-  \<open>pos_countNP [] = 0\<close> |                                          
-  \<open>pos_countNP ((_,p) # NP) = pos_count p + pos_countNP NP\<close>
+primrec common where
+  \<open>common [] ys = False\<close> |
+  \<open>common (x # xs) ys = (member x ys \<or> common xs ys)\<close>
 
-private fun pos_countNNSP where
-  \<open>pos_countNNSP [] = 0\<close> |                                          
-  \<open>pos_countNNSP ((_,_,p) # NNSP) = pos_count p + pos_countNNSP NNSP\<close>
-
-
-private fun missing' where
-  \<open>missing' ms [] = 0\<close> |
-  \<open>missing' ms (n # ns) = (if \<not>member n ms then Suc (missing' ms ns) else missing' ms ns)\<close>
-
-private fun missing :: "('a \<times> nat list \<times>'b) list \<Rightarrow> nat list \<Rightarrow> nat" where
-  \<open>missing [] ns = 0\<close> |
-  \<open>missing ((_,ms,_) # R) ns = missing' ms ns + missing R ns\<close>
+lemma common_iff[iff]: \<open>common xs ys \<longleftrightarrow> set xs \<inter> set ys \<noteq> {}\<close>
+  by (induct xs) simp_all
 
 (*
 ----------EXPLANATION OF PARAMETERS OF ATOMIZE---------
@@ -199,75 +74,64 @@ R: RHS possibility formulas with potentially complex subformulas. Formulas here 
 Q/P: LHS and RHS complex formulas.
 *)
 
-function sv :: \<open>
-  (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow> (nat \<times> nat) list \<Rightarrow>
-  (nat \<times> (nat list) \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list \<Rightarrow> (nat \<times> 'a hybr_form) list 
-  \<Rightarrow> bool\<close> where
+function sv where
   (*match RHS*)
-  \<open>sv LA RA RN LP RP R Q ((n,Pro a) # P) = 
-    sv LA ((n,a) # RA) RN LP RP R Q P\<close> |
+  \<open>sv mn cn LA RA Y X Q ((n,Pro a) # P) = 
+    sv mn cn LA ((n,Pro a) # RA) Y X Q P\<close> |
 
-  \<open>sv LA RA RN LP RP R Q ((n1,Nom n2) # P) = 
-    sv LA RA ((n1,n2) # RN) LP RP R Q P\<close> |
+  \<open>sv mn cn LA RA Y X Q ((n1,Nom n2) # P) = 
+    sv mn cn LA ((n1,Nom n2) # RA) Y X Q P\<close> |
 
-  \<open>sv LA RA RN LP RP R Q ((n,Neg p) # P) = 
-    sv LA RA RN LP RP R ((n,p) # Q) P\<close> |
+  \<open>sv mn cn LA RA Y X Q ((n,Neg p) # P) = 
+    sv mn cn LA RA Y X ((n,p) # Q) P\<close> |
 
-  \<open>sv LA RA RN LP RP R Q ((n,Con p1 p2) # P) =
-    ((sv LA RA RN LP RP R Q ((n,p1) # P)) \<and> (sv LA RA RN LP RP R Q ((n,p2) # P)))\<close> |
+  \<open>sv mn cn LA RA Y X Q ((n,Con p1 p2) # P) =
+    ((sv mn cn LA RA Y X Q ((n,p1) # P)) \<and> (sv mn cn LA RA Y X Q ((n,p2) # P)))\<close> |
 
-  \<open>sv LA RA RN LP RP R Q ((n1,Sat n2 p) # P) = 
-    sv LA RA RN LP RP R Q ((n2,p) # P)\<close> |
+  \<open>sv mn cn LA RA Y X Q ((n1,Sat n2 p) # P) = 
+    sv mn cn LA RA Y X Q ((n2,p) # P)\<close> |
 
-  \<open>sv LA RA RN LP RP R Q ((n,Pos p) # P) = 
-    sv LA RA RN LP RP ((n,[],p) # R) Q P\<close>|
+  \<open>sv mn cn LA RA Y X Q ((n,Pos p) # P) = 
+    sv mn cn LA RA Y ((n,p) # X) Q P\<close>|
 
   (*match LHS*)
-  \<open>sv LA RA RN LP RP R ((n,Pro a) # Q) [] = 
-    sv ((n,a) # LA) RA RN LP RP R Q []\<close> |
+  \<open>sv mn cn LA RA Y X ((n,Pro a) # Q) [] = 
+    sv mn cn ((n,Pro a) # LA) RA Y X Q []\<close> |
 
-  \<open>sv LA RA RN LP RP R ((n1,Nom n2) # Q) [] = 
-    sv (mergeNA LA n1 n2) (mergeNA RA n1 n2) (mergeNN RN n1 n2) 
-      (mergeNN LP n1 n2) (mergeNN RP n1 n2) (mergeNNSP R n1 n2) (mergeNP Q n1 n2) []\<close> |
+  \<open>sv mn cn LA RA Y X ((n1,Nom n2) # Q) [] = 
+    sv mn cn (mergeNP LA n1 n2) (mergeNP RA n1 n2) (mergeNP Y n1 n2) (mergeNP X n1 n2) (mergeNP Q n1 n2) []\<close> |
 
-  \<open>sv LA RA RN LP RP R ((n,Neg p) # Q) [] = 
-    sv LA RA RN LP RP R Q [(n,p)]\<close> |
+  \<open>sv mn cn LA RA Y X ((n,Neg p) # Q) [] = 
+    sv mn cn LA RA Y X Q [(n,p)]\<close> |
 
-  \<open>sv LA RA RN LP RP R ((n,Con p1 p2) # Q) []= 
-    sv LA RA RN LP RP R ((n,p1) # (n,p2) # Q) []\<close> |
+  \<open>sv mn cn LA RA Y X ((n,Con p1 p2) # Q) []= 
+    sv mn cn LA RA Y X ((n,p1) # (n,p2) # Q) []\<close> |
 
-  \<open>sv LA RA RN LP RP R ((n1,Sat n2 p) # Q) [] = 
-    sv LA RA RN LP RP R ((n2,p) # Q) []\<close> |
+  \<open>sv mn cn LA RA Y X ((n1,Sat n2 p) # Q) [] = 
+    sv mn cn LA RA Y X ((n2,p) # Q) []\<close> |
 
-  \<open>sv LA RA RN LP RP R ((n,Pos p) # Q) [] = (
-    let nw = fresh (
-      nominalsNA LA U nominalsNA RA U nominalsNN RN U nominalsNN LP U 
-      nominalsNN RP U nominalsNNSP R U nominalsNP ((n,Pos p) # Q)) 
-    in (sv LA RA RN ((n,nw) # LP) RP R ((nw,p) # Q) []))\<close> |
+  \<open>sv mn cn LA RA Y X ((n,Pos p) # Q) [] =
+    sv (mn + 1) cn ((n,Pos (Nom mn)) # LA) RA Y X ((mn,p) # Q) []\<close> |
 (*-------Try all relevant assignments of nominals to possibility on RHS-----------
 If no assignment can be made, check if current sequent is a tautology.
 Else we can process a statement @n\<diamond>P.
   Find a nominal m to witness the statement
   Check if the sequent with @n\<diamond>P removed fulfills both @n\<diamond>m and @mP
   Lastly, try another assignment. Remember that we already tried m.*)
-  \<open>sv LA RA RN LP RP R [] [] = (
-      case 
-        saturate R (
-          nominalsNA LA U nominalsNA RA U nominalsNN RN U 
-          nominalsNN LP U nominalsNN RP U nominalsNNSP R)
-      of
-        None \<Rightarrow> (common LA RA \<or> common LP RP \<or> reflect RN)
-      | Some (n,m,p,R',R'') \<Rightarrow> 
-          (sv LA RA RN LP ((n,m) # RP) R' [] [] \<and> sv LA RA RN LP RP R' [] [(m,p)]) 
-          \<or> sv LA RA RN LP RP R'' [] [])\<close> 
+  \<open>sv mn cn LA RA Y ((n,p) # X) [] [] = (
+    if cn < mn 
+    then (
+      sv mn 0 LA ((n,Pos (Nom cn)) # RA) [] (Y @ X) [] [] \<and>
+      sv mn 0 LA RA [] (Y @ X) [] [(cn,p)]) \<or> 
+      sv mn (cn + 1) LA RA Y ((n,p) # X) [] []
+    else sv mn 0 LA RA ((n,p) # Y) X [] [])\<close> |
+  \<open>sv mn cn LA RA Y [] [] [] = (reflect RA \<or> common LA RA)\<close>
   by pat_completeness simp_all
 (*size definition for proving termination of sv*)
 termination sorry
 
 definition prover where 
-  \<open>prover p \<equiv> sv [] [] [] [] [] [] [] [(fresh (nominalsForm p),p)]\<close>
-
-end
+  \<open>prover p \<equiv> (let mn = maxnomP 0 p in sv (mn + 2) 0 [] [] [] [] [] [(mn + 1,p)])\<close>
 
 primrec semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarrow> ('c \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow>
                   (nat \<Rightarrow> 'c) \<Rightarrow> 'c \<Rightarrow> 'a hybr_form \<Rightarrow> bool\<close> where
@@ -278,20 +142,66 @@ primrec semantics :: \<open>('c \<Rightarrow> 'c \<Rightarrow> bool) \<Rightarro
   \<open>semantics RE V G w (Sat n p) = semantics RE V G (G n) p\<close> |
   \<open>semantics RE V G w (Pos p) = (\<exists> v. (RE w v) \<and> (semantics RE V G v p))\<close>
 
-definition \<open>sc RE V G LA RA RN LP RP R Q P \<equiv> 
+definition \<open>sc RE V G LA RA Y X Q P \<equiv> 
   (
-    (\<forall> (n,p) \<in> set Q. semantics RE V G (G n) p) \<and> 
-    (\<forall> (n1,n2) \<in> set LP. RE (G n1) (G n2)) \<and>
-    (\<forall> (n,a) \<in> set LA. V (G n) a)
+    (\<forall> (n,p) \<in> set Q \<union> set LA. semantics RE V G (G n) p)
   ) \<longrightarrow> (
-    (\<exists> (n,p) \<in> set P. semantics RE V G (G n) p) \<or>
-    (\<exists> (n,ns,p) \<in> set R. 
-      (\<exists> w. RE (G n) w \<and> semantics RE V G w p)) \<or>
-    (\<exists> (n1,n2) \<in> set RP. RE (G n1) (G n2)) \<or>
-    (\<exists> (n1,n2) \<in> set RN. (G n1) = (G n2)) \<or>
-    (\<exists> (n,a) \<in> set RA. V (G n) a)
+    (\<exists> (n,p) \<in> set P \<union> set RA. semantics RE V G (G n) p) \<or>
+    (\<exists> (n,p) \<in> set Y \<union> set X. semantics RE V G (G n) (Pos p))
   )\<close>
 
+definition \<open>
+  consistent_soundness mn cn LA RA Y X Q P \<equiv>
+  (cn \<noteq> 0 \<longleftrightarrow> Q = [] \<and> P = []) \<and>
+  (\<forall> (n,p) \<in> set LA \<union> set RA \<union> set Y \<union> set X \<union> set Q \<union> set P. mn > n \<and> mn > maxnomP 0 p)\<close>
+
+theorem soundness: \<open>
+  consistent_soundness mn cn LA RA Y X Q P \<Longrightarrow> 
+  sv mn cn LA RA Y X Q P \<Longrightarrow>
+  (\<forall> RE V G. sc RE V G LA RA Y X Q P)\<close>
+proof (induct Y X Q P rule: sv.induct)
+  case (1 mn cn LA RA Y X Q n a P)
+  then show ?case sorry
+next
+  case (2 mn cn LA RA Y X Q n1 n2 P)
+  then show ?case sorry
+next
+  case (3 mn cn LA RA Y X Q n p P)
+  then show ?case sorry
+next
+  case (4 mn cn LA RA Y X Q n p1 p2 P)
+  then show ?case sorry
+next
+  case (5 mn cn LA RA Y X Q n1 n2 p P)
+  then show ?case sorry
+next
+  case (6 mn cn LA RA Y X Q n p P)
+  then show ?case sorry
+next
+  case (7 mn cn LA RA Y X n a Q)
+  then show ?case sorry
+next
+  case (8 mn cn LA RA Y X n1 n2 Q)
+  then show ?case sorry
+next
+  case (9 mn cn LA RA Y X n p Q)
+  then show ?case sorry
+next
+  case (10 mn cn LA RA Y X n p1 p2 Q)
+  then show ?case sorry
+next
+  case (11 mn cn LA RA Y X n1 n2 p Q)
+  then show ?case sorry
+next
+  case (12 mn cn LA RA Y X n p Q)
+  then show ?case sorry
+next
+  case (13 mn cn LA RA Y n p X)
+  then show ?case sorry
+next
+  case (14 mn cn LA RA Y)
+  then show ?case sorry
+qed
 
 (*abbreviations*)
 abbreviation Imp (infixr "THEN"  180)
@@ -425,7 +335,7 @@ proposition \<open>\<not>(prover (Con (Neg (Pro A)) (Pro A)))\<close>
 proposition \<open>\<not>(prover (Sat (1) (Con (Neg (Pro A)) (Pro A))))\<close>
   by eval
 
-proposition \<open>\<not>(sv [] [] [] [] [] [] [(1,\<diamond> NOM 2)] [(1,\<diamond> AT 1 (NOT (\<diamond> PRO A)))])\<close>
+proposition \<open>\<not>(sv 3 0 [] [] [] [] [(1,\<diamond> NOM 2)] [(1,\<diamond> AT 1 (NOT (\<diamond> PRO A)))])\<close>
   by eval
 
 proposition \<open>\<not>(prover ( 
@@ -456,6 +366,8 @@ proposition \<open>\<not>prover ((AT (2) (Pro A)) THEN (AT (1) (\<diamond> (AT (
 
 proposition \<open>\<not>prover ((Pro A) THEN (Sat (1) (Pro A)))\<close>
   by eval
+
+value \<open>maxnomP 0 ((Pro A) THEN (Sat (1) (Pro A)))\<close>
 
 proposition \<open>\<not>prover (AT 1 (\<diamond> ((NOT (AT 1 (\<diamond> NOM 2))) OR (PRO A OR NOT PRO A))))\<close>
   by eval

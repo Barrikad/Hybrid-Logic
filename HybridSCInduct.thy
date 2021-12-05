@@ -103,7 +103,8 @@ next
 qed (auto simp add: semantics_SC_def)
 
 lemma completness: \<open>(\<forall> R V G. semantics_SC R V G A B) \<Longrightarrow> A \<turnstile> B\<close>
-proof (induct rule: SC.induct)
+proof (induct rule: SC.induct) \<comment> \<open>Failed to apply proof method!\<close>
+  oops
 
 
 end
